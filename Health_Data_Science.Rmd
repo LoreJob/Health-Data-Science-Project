@@ -1,0 +1,55 @@
+---
+title: Health Data Science
+output:
+  html_document:
+    fig_caption: yes
+    theme: flatly #sandstone #spacelab #flatly
+    highlight: pygments
+    code_folding: show
+    toc: TRUE
+    toc_depth: 2
+    number_sections: TRUE
+    toc_float:
+      smooth_scroll: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# Only need to run these once:
+#  install.packages("foreign")  
+#  install.packages("tidyverse")
+#  install.packages("readr")
+#  install.packages("readxl")
+#  install.packages("haven")
+#  install.packages("survey")
+#  install.packages("remotes")
+
+# Run these every time you re-start R:
+  library(foreign)
+  library(tidyverse)
+  library(readr)
+  library(readxl)
+  library(haven)
+  library(survey)
+  library(remotes)
+  library(MEPS)
+```
+
+```{r, include=FALSE}
+remotes::install_github("e-mitchell/meps_r_pkg/MEPS")
+PMED21 = read_MEPS(year = 2021, type = "PMED")
+```
+
+# 1 - First Paragraph
+
+If you need some information you can go deep in the topics here:
+
+-   *Documentation*: <https://meps.ahrq.gov/data_stats/download_data/pufs/h229a/h229adoc.pdf>
+-   *Codebook*: <https://meps.ahrq.gov/data_stats/download_data/pufs/h229a/h229acb.pdf>
+
+```{r}
+PMED21
+```
