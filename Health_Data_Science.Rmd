@@ -40,20 +40,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, include=FALSE}
 remotes::install_github("e-mitchell/meps_r_pkg/MEPS")
-PMED21 = read_MEPS(year = 2021, type = "PMED")
+FYC21 = read_MEPS(year = 2021, type = "FYC")
 ```
 
 # 1 - First Paragraph
-
-If you need some information you can go deep in the topics here:
-
--   *Documentation*: <https://meps.ahrq.gov/data_stats/download_data/pufs/h229a/h229adoc.pdf>
--   *Codebook*: <https://meps.ahrq.gov/data_stats/download_data/pufs/h229a/h229acb.pdf>
-
-```{r}
-PMED21
-``` 
-
 
 **For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
 
@@ -67,14 +57,13 @@ PMED21
 
 ```{r}
 #Our data,  i put it in our holder, but if you know how to upload from github MEPS you can do it.
-head(h233,9)
-
+head(FYC21,9)
 ```
 
 ```{r}
 #So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
 
-range(h233$SDENICPROD)
+range(FYC21$SDENICPROD)
 
 ```
 
