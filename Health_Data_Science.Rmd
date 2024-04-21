@@ -55,6 +55,25 @@ PMED21
 ```
 
 
+**For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
 
-This is Giuseppe trying to do a commit.
+*Here is info about characteristics:* <https://meps.ahrq.gov/data_files/publications/st554/stat554.shtml>
+
+*Here is questionary report:* <https://meps.ahrq.gov/survey_comp/hc_survey/paper_quest/2021/2021_SHE_SAQ.pdf>
+
+*Codebook:* <https://meps.ahrq.gov/data_stats/download_data/pufs/h233/h233cb.pdf>
+
+*Descriptive statistics*
+
+```{r}
+#Our data,  i put it in our holder, but if you know how to upload from github MEPS you can do it.
+head(h233,9)
+
+```
+
+```{r}
+#So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
+
+range(h233$SDENICPROD)
+```
 
