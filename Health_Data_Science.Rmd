@@ -75,5 +75,6 @@ head(h233,9)
 #So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
 
 range(h233$SDENICPROD)
+
 ```
 
