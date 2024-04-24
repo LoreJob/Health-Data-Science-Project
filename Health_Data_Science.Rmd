@@ -57,13 +57,73 @@ FYC21 = read_MEPS(year = 2021, type = "FYC")
 
 ```{r}
 #Our data,  i put it in our holder, but if you know how to upload from github MEPS you can do it.
-head(FYC21,9)
+h233 <- read_dta("h233.dta")
+head(h233)
 ```
 
 ```{r}
 #So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
+range(h233$ADSMOK42)
+range(h233$SDENICPROD)
+```
 
-range(FYC21$SDENICPROD)
+```{r}
+smokers_data <- h233[h233$ADSMOK42 == 1, ]
 
+age_groups <- cut(smokers_data$AGELAST,
+                  breaks = c(18, 25, 35, 45, 65, Inf),
+                  labels = c("18-24", "25-34", "35-44", "45-64", "65+"),
+                  right = FALSE)
+
+age_group_percentages <- prop.table(table(age_groups)) * 100
+
+# Create a bar chart of age group distribution among current smokers
+barplot(age_group_percentages,
+        main = "Age Group Distribution of Current Smokers",
+        xlab = "Age Group",
+        ylab = "Percentage",
+        col = "skyblue",
+        border = "black",
+        ylim = c(0, 100),
+        las = 1)
+```
+
+
+```{r}
+# Assuming your data frame is named df
+
+# Subset the data to include only electronic cigarette smokers
+e_cigarette_smokers_data <-  h233[h233$SDENICPROD == 1, ]
+
+# Define age groups
+age_groups <- cut(e_cigarette_smokers_data$AGELAST,
+                  breaks = c(18, 25, 35, 45, 65, Inf),
+                  labels = c("18-24", "25-34", "35-44", "45-64", "65+"),
+                  right = FALSE)
+
+# Calculate the percentage of each age group
+age_group_percentages <- prop.table(table(age_groups)) * 100
+
+# Create a bar chart of age group distribution among electronic cigarette smokers
+barplot(age_group_percentages,
+        main = "Age Group Distribution of Electronic Cigarette Smokers",
+        xlab = "Age Group",
+        ylab = "Percentage",
+        col = "skyblue",
+        border = "black",
+        ylim = c(0, 100),
+        las = 1)
+
+```
+```{r}
+
+age_group_counts <- table(cut(e_cigarette_smokers_data$AGELAST, breaks = c(18, 25, 35, 45, 65, Inf)))
+
+age_group_percentages <- prop.table(age_group_counts) * 100
+
+age_group_table <- data.frame(Age_Group = names(age_group_percentages),
+                              Percentage_E_Cig_Smokers = age_group_percentages)
+
+print(age_group_table)
 ```
 
