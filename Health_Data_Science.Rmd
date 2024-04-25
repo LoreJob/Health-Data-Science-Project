@@ -104,7 +104,7 @@ SDLIFE: satisfied with life
 
 
 
-```{r}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 #we will choose some variables to keep
 
 vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
@@ -115,7 +115,10 @@ vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
 
 small_df = h233 %>% select(all_of(vars_to_keep))
 
+small_df
 
+small_df %>% select(ADSMOK42, ADGENH42, ADENGY42) %>% group_by(ADSMOK42) %>%
+  summarise(n_excellent_health = mean(ADGENH42==1))
 
 ```
 
