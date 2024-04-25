@@ -27,6 +27,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #  install.packages("survey")
 #  install.packages("remotes")
 
+
 # Run these every time you re-start R:
   library(foreign)
   library(tidyverse)
@@ -35,12 +36,12 @@ knitr::opts_chunk$set(echo = TRUE)
   library(haven)
   library(survey)
   library(remotes)
-  library(MEPS)
+#  library(MEPS)
 ```
 
 ```{r, include=FALSE}
-remotes::install_github("e-mitchell/meps_r_pkg/MEPS")
-FYC21 = read_MEPS(year = 2021, type = "FYC")
+#remotes::install_github("e-mitchell/meps_r_pkg/MEPS")
+#FYC21 = read_MEPS(year = 2021, type = "FYC")
 ```
 
 # 1 - First Paragraph
@@ -65,7 +66,59 @@ head(h233)
 #So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
 range(h233$ADSMOK42)
 range(h233$SDENICPROD)
+
 ```
+
+Our main explanatory variables: 
+ADSMOK42: 
+SDENICPROD
+OFTSMK53: how often smokes cigarettes
+
+Our potential variables of interest that can be explained by smoking
+or might have correlation/interaction with variables of interest
+
+ADDPRS42: felt down/depressed
+ADGENH42: health in general
+ADENGY42: had a lot of energy
+ADHOPE42: how often felt hopeless
+ADNERV42: how often felt nervous
+ADPCFL42: felt calm/peaceful
+ADSAD42: how often felt sad
+AGELAST: person age
+ASTHDX: asthma diagnosis
+CALUNG: lung cancer diagnosed
+CHOLDX: high cholesterol diagnosis
+DIABDX_M18: diabetes diagnosis
+EMPHDX: Emphysema diagnosis
+FAMINC21: family income
+HIBPDX: high blood pressure diagnosis
+MNHLTH31: perceived mental health status
+TTLP21X: person total income
+FOODVL21: monthly value of foodstamps
+RTHLTH31: perceived health status
+WLKLIM53: limitation in physical functioning
+SDCOMPAN: feel lack of companionship
+SDLEFTOUT: feel leftout
+SDLIFE: satisfied with life
+
+
+
+
+```{r}
+#we will choose some variables to keep
+
+vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
+                     "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42","AGELAST",
+                     "ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX","FAMINC21",
+                      "HIBPDX","MNHLTH31","RTHLTH31",
+                     "TTLP21X","FOODVL21","WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE")
+
+small_df = h233 %>% select(all_of(vars_to_keep))
+
+
+
+```
+
 
 ```{r}
 smokers_data <- h233[h233$ADSMOK42 == 1, ]
@@ -115,6 +168,8 @@ barplot(age_group_percentages,
         las = 1)
 
 ```
+
+
 ```{r}
 
 age_group_counts <- table(cut(e_cigarette_smokers_data$AGELAST, breaks = c(18, 25, 35, 45, 65, Inf)))
