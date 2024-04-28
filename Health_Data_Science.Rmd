@@ -73,10 +73,6 @@ habits.
 *Codebook:* <https://meps.ahrq.gov/data_stats/download_data/pufs/h233/h233cb.pdf>
 
 
-
-
-
-
 ```{r}
 # the dataset is in the github repo, we don't need to download it every time
 h233 <- read_dta("h233.dta")
@@ -143,8 +139,6 @@ SDLIFE: satisfied with life
 
 
 ```{r}
-
-
 vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
                  "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42",
                  "AGELAST","ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX",
@@ -174,9 +168,13 @@ small_df %>% select(ADSMOK42, OFTSMK53) %>%
   table()
 
 ```
+ADSMOK42 is the code about the people that are currently smoking. 
+OFTSMK53 is the code about how often the people are smoking cigarettes (just if they're > 17 years old).
 
 There must be something wrong: it seems that some people(1255) that replied yes to smoking
 also replied not at all to the question how often
+
+Probably the results is that there are people that have smoked in the past, but now they don't smokes anymore.
 
 ```{r}
 smokers_data <- h233[h233$ADSMOK42 == 1, ]
