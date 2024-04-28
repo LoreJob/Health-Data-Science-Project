@@ -48,80 +48,135 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
 
+Comment by Giuseppe:
+
+(I think this topic is too specific and the dataset will not allow us to explore it deeply.
+We would need to have information on older persons that have asthma and their smoking habits when they were young)
+
+I propose we chose a more general topic:
+
+<hr>
+
+**The central question we want to answer is: what are the negative effects of smoking?**
+
+We will look at the association between smoking and health related issues. We 
+will also look at some mental health indicators and how they relate to smoking
+habits.
+
+<hr>
+
+
 *Here is info about characteristics:* <https://meps.ahrq.gov/data_files/publications/st554/stat554.shtml>
 
 *Here is questionary report:* <https://meps.ahrq.gov/survey_comp/hc_survey/paper_quest/2021/2021_SHE_SAQ.pdf>
 
 *Codebook:* <https://meps.ahrq.gov/data_stats/download_data/pufs/h233/h233cb.pdf>
 
-*Descriptive statistics*
+
+
+
+
 
 ```{r}
-#Our data,  i put it in our holder, but if you know how to upload from github MEPS you can do it.
+# the dataset is in the github repo, we don't need to download it every time
 h233 <- read_dta("h233.dta")
 head(h233)
 ```
 
-```{r}
-#So our response variable is: SDENICPROD SDOH: USED ELECTRONIC NICOTINE PROD and ADSMOK42 SAQ: CURRENTLY SMOKE
-range(h233$ADSMOK42)
-range(h233$SDENICPROD)
+Our main explanatory variables:
 
-```
+ADSMOK42: currently smokes
 
-Our main explanatory variables: 
-ADSMOK42: 
-SDENICPROD
+SDENICPROD: used electronic nicotine product
+
 OFTSMK53: how often smokes cigarettes
-
+<hr>
 Our potential variables of interest that can be explained by smoking
 or might have correlation/interaction with variables of interest
 
 ADDPRS42: felt down/depressed
+
 ADGENH42: health in general
+
 ADENGY42: had a lot of energy
+
 ADHOPE42: how often felt hopeless
+
 ADNERV42: how often felt nervous
+
 ADPCFL42: felt calm/peaceful
+
 ADSAD42: how often felt sad
+
 AGELAST: person age
+
 ASTHDX: asthma diagnosis
+
 CALUNG: lung cancer diagnosed
+
 CHOLDX: high cholesterol diagnosis
+
 DIABDX_M18: diabetes diagnosis
+
 EMPHDX: Emphysema diagnosis
+
 FAMINC21: family income
+
 HIBPDX: high blood pressure diagnosis
+
 MNHLTH31: perceived mental health status
+
 TTLP21X: person total income
+
 FOODVL21: monthly value of foodstamps
+
 RTHLTH31: perceived health status
+
 WLKLIM53: limitation in physical functioning
+
 SDCOMPAN: feel lack of companionship
-SDLEFTOUT: feel leftout
+
+SDLEFTOUT: feel left out
+
 SDLIFE: satisfied with life
 
 
 
+```{r}
 
-```{r message=FALSE, warning=FALSE, paged.print=FALSE}
-#we will choose some variables to keep
 
 vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
-                     "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42","AGELAST",
-                     "ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX","FAMINC21",
-                      "HIBPDX","MNHLTH31","RTHLTH31",
-                     "TTLP21X","FOODVL21","WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE")
+                 "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42",
+                 "AGELAST","ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX",
+                 "FAMINC21","HIBPDX","MNHLTH31","RTHLTH31","TTLP21X","FOODVL21",
+                 "WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE")
 
-small_df = h233 %>% select(all_of(vars_to_keep))
+small_df = h233 %>% select(all_of(vars_to_keep)) %>% as_factor()
+#turning the variables into factors
 
-small_df
+small_df = small_df %>% mutate(age_group = cut(AGELAST,
+                                    breaks = c(-Inf,18, 25, 35, 45, 65, Inf),
+                  labels = c("0-18","18-24", "25-34", "35-44", "45-64", "65+"),
+                  right = FALSE))
+#adding a new variable to break into age groups
 
-small_df %>% select(ADSMOK42, ADGENH42, ADENGY42) %>% group_by(ADSMOK42) %>%
-  summarise(n_excellent_health = mean(ADGENH42==1))
+small_df %>% summary()
 
 ```
 
+
+# Descriptive statistics
+
+```{r}
+# I found some inconsistencies in the data set:
+small_df %>% select(ADSMOK42, OFTSMK53) %>%
+  reframe(smokes = factor(ADSMOK42), how_often = factor(OFTSMK53)) %>%
+  table()
+
+```
+
+There must be something wrong: it seems that some people(1255) that replied yes to smoking
+also replied not at all to the question how often
 
 ```{r}
 smokers_data <- h233[h233$ADSMOK42 == 1, ]
@@ -142,6 +197,21 @@ barplot(age_group_percentages,
         border = "black",
         ylim = c(0, 100),
         las = 1)
+
+
+# I tried to recreate the previous graph but adding more information -Giuseppe
+small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
+  summarise(n_smokers = sum(ADSMOK42 == "1 YES"),
+            n_non_smokers = sum(ADSMOK42 == "2 NO"),
+            n_inapplicable = sum(ADSMOK42 == "-1 INAPPLICABLE")) %>%
+  mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
+  slice(-1) %>%
+  ggplot(aes(x = age_group)) +
+  geom_col(aes(y = n_non_smokers, fill = "non smokers")) +
+  geom_col(aes(y = n_smokers, fill = "smokers")) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
+  labs(title = "Age distribution of smokers and non smokers",
+       y = "count", x = "age group", fill = "") + theme_classic()
 ```
 
 
