@@ -253,3 +253,14 @@ age_group_table <- data.frame(Age_Group = names(age_group_percentages),
 print(age_group_table)
 ```
 
+
+
+Things to do: 
+- 1 Introduction
+- 2 Exploratory analysis: go deep into the dataset analyzing the most important
+    variables.
+- 3 Effect of smoking/nicotine on physical health: understand how much is dangerous 
+    the abuse of smoke for the Pysichal healt
+- 4 Effect of smoking/nicotine on mental health:understand how much is dangerous 
+    the abuse of smoke for the mental healt
+- 5 Conclusion
