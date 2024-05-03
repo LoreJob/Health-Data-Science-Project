@@ -165,7 +165,7 @@ small_df %>% summary()
 # I found some inconsistencies in the data set:
 small_df %>% select(ADSMOK42, OFTSMK53) %>%
   reframe(smokes = factor(ADSMOK42), how_often = factor(OFTSMK53)) %>%
-  table()
+  table() %>% knitr::kable()
 
 ```
 ADSMOK42 is the code about the people that are currently smoking. 
