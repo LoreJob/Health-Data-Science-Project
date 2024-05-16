@@ -39,11 +39,6 @@ knitr::opts_chunk$set(echo = TRUE)
 #  library(MEPS)
 ```
 
-```{r, include=FALSE}
-#remotes::install_github("e-mitchell/meps_r_pkg/MEPS")
-#FYC21 = read_MEPS(year = 2021, type = "FYC")
-```
-
 # 1 - First Paragraph
 
 **For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
@@ -83,12 +78,9 @@ Our main explanatory variables:
 
 ADSMOK42: currently smokes
 
-SDENICPROD: used electronic nicotine product
+ADNSMK42 - If ADSMOK42 = 1, doctor advised you to quit smoking
 
-OFTSMK53: how often smokes cigarettes
-<hr>
-Our potential variables of interest that can be explained by smoking
-or might have correlation/interaction with variables of interest
+SDENICPROD: used electronic nicotine product
 
 ADDPRS42: felt down/depressed
 
@@ -108,42 +100,97 @@ AGELAST: person age
 
 ASTHDX: asthma diagnosis
 
+ARTHDX:  had ever been diagnosed with arthritis
+
 CALUNG: lung cancer diagnosed
 
 CHOLDX: high cholesterol diagnosis
+
+CHBRON31: if the person (aged 18 or older) has had chronic bronchitis in the last 12 months
 
 DIABDX_M18: diabetes diagnosis
 
 EMPHDX: Emphysema diagnosis
 
+EMPST31: employment status
+
 FAMINC21: family income
 
-HIBPDX: high blood pressure diagnosis
+HIBPDX: whether the person had ever been diagnosed as having high blood pressure (other than during pregnancy)
 
 MNHLTH31: perceived mental health status
 
+MARRY21X: marital status
+
 TTLP21X: person total income
 
-FOODVL21: monthly value of foodstamps
+OHRTDX: asked if the person had ever been diagnosed with any other kind of heart disease or condition
+
+OHRTTYPE: specify other heart diseases or conditions
 
 RTHLTH31: perceived health status
+
+REGION21:indicate the Census region for the RU. (A Reporting Unit (RU) is a person or group of persons in the sampled DU who are related by blood, marriage, adoption, or other family association. Each RU was interviewed as a single entity for MEPS.)
 
 WLKLIM53: limitation in physical functioning
 
 SDCOMPAN: feel lack of companionship
 
+STRKDX: asked if the person (aged 18 or older) had ever been diagnosed as having had a stroke or transient ischemic attack 
+
 SDLEFTOUT: feel left out
 
 SDLIFE: satisfied with life
 
+SDHOME - How satisfied with house/apartment where person lives
 
+SDISOL - How often feel isolated from others
+
+SEX: gender
+
+SDMEDCARE - Rate neighborhood availability of places to get medical care
+
+SDHLTHFOOD - Rate neighborhood availability of places to buy healthy food
+
+SDHMDEPR - When under 18 years of age, lived with someone who was depressed, mentally ill, or suicidal
+
+SDHMALC - When under 18 years of age, lived with a problem drinker or alcoholic
+
+SDHMDRG - When under 18 years of age, lived with someone who used illegal street drugs or abused prescription medication
+
+SDHMDIV - Parents separated or divorced
+
+SDHMBEAT - How often did parents or adults in home slap, hit, kick, punch, or beat each other up
+
+SDHURTCHLD - How often did parents or adults in home hit, beat, kick, or physically hurt person
+
+FTSTU21X: student status
+
+RACEV2X:race
+
+
+## 46 variables 
+#Variables of interest: ADSMOK42, ADNSMK42, SDENICPROD
+
+#Demograpfical variables: AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31
+
+#Mental health: ADDPRS42, ADHOPE42, ADNERV42, ADPCFL42, ADSAD42, MNHLTH31
+
+#General health: ADGENH42, ADENGY42, RTHLTH31, WLKLIM53
+
+#Health deseases: ASTHDX, ARTHDX, CALUNG, CHOLDX, CHBRON31, DIABDX_M18, EMPHDX, HIBPDX, OHRTDX, OHRTTYPE, STRKDX
+
+#The Social Determinants of Health Survey (SDOH) includes questions about the social determinants of health, such as housing, financial well-being, food security, social support, discrimination, and physical and sexual violence.: SDLIFE, SDHOME, SDMEDCARE, SDHLTHFOOD, SDCOMPAN, SDLEFTOUT, SDISOL, SDHMDEPR, SDHMALC, SDHMDRG, SDHMDIV, SDHMBEAT, SDHURTCHLD
 
 ```{r}
-vars_to_keep = c("ADSMOK42","SDENICPROD","OFTSMK53","ADDPRS42","ADGENH42",
+vars_to_keep = c("ADSMOK42","SDENICPROD","ADDPRS42","ADGENH42",
                  "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42",
                  "AGELAST","ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX",
-                 "FAMINC21","HIBPDX","MNHLTH31","RTHLTH31","TTLP21X","FOODVL21",
-                 "WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE")
+                 "FAMINC21","HIBPDX","MNHLTH31","RTHLTH31","TTLP21X",
+                 "WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE", 'REGION21', 'RACEV2X', 
+                 'FTSTU21X', 'SEX','STRKDX','HIBPDX', 'MARRY21X','CHBRON31' ,'CANCERDX', 
+                 'ARTHDX', 'ADNSMK42', 'SDHOME', 'SDMEDCARE','SDHLTHFOOD', 'SDISOL',
+                 'SDHMDEPR','SDHMALC','SDHMDRG', 'SDHMDIV', 'SDHMBEAT', 'SDHURTCHLD', 'EMPST31')
 
 small_df = h233 %>% select(all_of(vars_to_keep)) %>% as_factor()
 #turning the variables into factors
@@ -163,39 +210,17 @@ small_df %>% summary()
 
 ```{r}
 # I found some inconsistencies in the data set:
-small_df %>% select(ADSMOK42, OFTSMK53) %>%
-  reframe(smokes = factor(ADSMOK42), how_often = factor(OFTSMK53)) %>%
+small_df %>% select(ADSMOK42, ADNSMK42) %>%
+  reframe(smokes = factor(ADSMOK42), how_often = factor(ADNSMK42)) %>%
   table() %>% knitr::kable()
 
 ```
 ADSMOK42 is the code about the people that are currently smoking. 
-OFTSMK53 is the code about how often the people are smoking cigarettes (just if they're > 17 years old).
+ADNSMK42 is the code ADSMOK42 = 1, doctor advised you to quit smoking
 
-There must be something wrong: it seems that some people(1255) that replied yes to smoking
-also replied not at all to the question how often
-
-Probably the results is that there are people that have smoked in the past, but now they don't smokes anymore.
+#Descriptive graphs 
 
 ```{r}
-smokers_data <- h233[h233$ADSMOK42 == 1, ]
-
-age_groups <- cut(smokers_data$AGELAST,
-                  breaks = c(18, 25, 35, 45, 65, Inf),
-                  labels = c("18-24", "25-34", "35-44", "45-64", "65+"),
-                  right = FALSE)
-
-age_group_percentages <- prop.table(table(age_groups)) * 100
-
-# Create a bar chart of age group distribution among current smokers
-barplot(age_group_percentages,
-        main = "Age Group Distribution of Current Smokers",
-        xlab = "Age Group",
-        ylab = "Percentage",
-        col = "skyblue",
-        border = "black",
-        ylim = c(0, 100),
-        las = 1)
-
 
 # I tried to recreate the previous graph but adding more information -Giuseppe
 small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
@@ -210,47 +235,60 @@ small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
   geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
   labs(title = "Age distribution of smokers and non smokers",
        y = "count", x = "age group", fill = "") + theme_classic()
+
+# e-smokers 
+small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
+  summarise(n_smokers = sum(SDENICPROD == "1 YES"),
+            n_non_smokers = sum(SDENICPROD == "2 NO"),
+            n_inapplicable = sum(SDENICPROD == "-1 INAPPLICABLE")) %>%
+  mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
+  slice(-1) %>%
+  ggplot(aes(x = age_group)) +
+  geom_col(aes(y = n_non_smokers, fill = "non e-sigarets smokers")) +
+  geom_col(aes(y = n_smokers, fill = "e-sigarets smokers")) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
+  labs(title = "Age distribution of e-sigarets smokers and non smokers",
+       y = "count", x = "age group", fill = "") + theme_classic()
+
+```
+#Working on the demograpthical characteristics 
+
+#For smokers 
+```{r}
+smokers_df <- small_df %>% filter(ADSMOK42 == "1 YES")
+
+# Subset for non-smokers
+non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
+
+# Summary for smokers
+summary_smokers <- smokers_df %>% 
+  select(AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31) %>% 
+  summary()
+
+# Summary for non-smokers
+summary_non_smokers <- non_smokers_df %>% 
+  select(AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31) %>% 
+  summary()
+
 ```
 
 
 ```{r}
-# Assuming your data frame is named df
+# Define a function to create plots
+create_plots <- function(data, variable) {
+  # Create a bar plot for the variable
+  barplot(table(data[[variable]]), main = variable, xlab = variable, ylab = "Frequency")
+}
 
-# Subset the data to include only electronic cigarette smokers
-e_cigarette_smokers_data <-  h233[h233$SDENICPROD == 1, ]
+# List of demographic characteristics
+demographic_variables <- c("AGELAST", "REGION21", "SEX", "RACEV2X", "MARRY21X", "FTSTU21X", "TTLP21X", "FAMINC21", "EMPST31")
 
-# Define age groups
-age_groups <- cut(e_cigarette_smokers_data$AGELAST,
-                  breaks = c(18, 25, 35, 45, 65, Inf),
-                  labels = c("18-24", "25-34", "35-44", "45-64", "65+"),
-                  right = FALSE)
+# Plot each demographic characteristic for smokers
+par(mfrow = c(3, 3)) # Arrange plots in a 3x3 grid
+for (variable in demographic_variables) {
+  create_plots(smokers_df, variable)
+}
 
-# Calculate the percentage of each age group
-age_group_percentages <- prop.table(table(age_groups)) * 100
-
-# Create a bar chart of age group distribution among electronic cigarette smokers
-barplot(age_group_percentages,
-        main = "Age Group Distribution of Electronic Cigarette Smokers",
-        xlab = "Age Group",
-        ylab = "Percentage",
-        col = "skyblue",
-        border = "black",
-        ylim = c(0, 100),
-        las = 1)
-
-```
-
-
-```{r}
-
-age_group_counts <- table(cut(e_cigarette_smokers_data$AGELAST, breaks = c(18, 25, 35, 45, 65, Inf)))
-
-age_group_percentages <- prop.table(age_group_counts) * 100
-
-age_group_table <- data.frame(Age_Group = names(age_group_percentages),
-                              Percentage_E_Cig_Smokers = age_group_percentages)
-
-print(age_group_table)
 ```
 
 
