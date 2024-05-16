@@ -281,7 +281,7 @@ create_plots <- function(data, variable) {
 }
 
 # List of demographic characteristics
-demographic_variables <- c("AGELAST", "REGION21", "SEX", "RACEV2X", "MARRY21X", "FTSTU21X", "TTLP21X", "FAMINC21", "EMPST31")
+demographic_variables <- c("age_group", "REGION21", "SEX", "RACEV2X", "MARRY21X", "FTSTU21X", "TTLP21X", "FAMINC21", "EMPST31")
 
 # Plot each demographic characteristic for smokers
 par(mfrow = c(3, 3)) # Arrange plots in a 3x3 grid
