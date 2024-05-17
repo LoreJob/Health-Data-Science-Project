@@ -11,6 +11,8 @@ output:
     number_sections: TRUE
     toc_float:
       smooth_scroll: FALSE
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -208,13 +210,6 @@ small_df %>% summary()
 
 # Descriptive statistics
 
-```{r}
-# I found some inconsistencies in the data set:
-small_df %>% select(ADSMOK42, ADNSMK42) %>%
-  reframe(smokes = factor(ADSMOK42), how_often = factor(ADNSMK42)) %>%
-  table() %>% knitr::kable()
-
-```
 ADSMOK42 is the code about the people that are currently smoking. 
 ADNSMK42 is the code ADSMOK42 = 1, doctor advised you to quit smoking
 
@@ -244,8 +239,8 @@ small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
   mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
   slice(-1) %>%
   ggplot(aes(x = age_group)) +
-  geom_col(aes(y = n_non_smokers, fill = "non e-sigarets smokers")) +
-  geom_col(aes(y = n_smokers, fill = "e-sigarets smokers")) +
+  geom_col(aes(y = n_non_smokers, fill = "non e-cigarets smokers")) +
+  geom_col(aes(y = n_smokers, fill = "e-cigarets smokers")) +
   geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
   labs(title = "Age distribution of e-sigarets smokers and non smokers",
        y = "count", x = "age group", fill = "") + theme_classic()
@@ -361,7 +356,7 @@ The distribution through smoker, who smokes because of doctor recommendation
 ```{r}
 ggplot(smokers_df, aes(x = ADNSMK42)) +
   geom_bar(fill = "skyblue") +
-  labs(title = "Distribution of Smokers by Doctor's Recommendation", x = "Doctor's Recommendation", y = "Frequency")
+  labs(title = "Distribution of Smokers by Doctor's Recommendation", x = "Doctor's Recommendation", y = "Frequency") + theme_classic()
 ```
 *The 38% of currently smokers smokes because of doctor advise to quit smoke*
 
@@ -369,7 +364,7 @@ The distribution of e-smokers in full data and through smokers
 ```{r}
 ggplot(smokers_df, aes(x = SDENICPROD == "1 YES")) +
   geom_bar(fill = "lightcoral") +
-  labs(title = "Distribution of e-Smokers through currently smokers", x = "E-smokers No/Yes", y = "Frequency")
+  labs(title = "Distribution of e-Smokers through currently smokers", x = "E-smokers No/Yes", y = "Frequency") + theme_classic()
 ```
 *Trough currently smokers just 21% are e-sigarets smokers*
 
@@ -492,16 +487,19 @@ create_plots_health_disease <- function(data, health_disease_variables, titles) 
   
 create_plots <- function(data, variable, title) {
     my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
-    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+    vector_to_plot = data %>% filter(.data[[variable]] %in% c("1 YES", "2 NO")) %>%
+      pull(variable) %>% factor()
+    
+    barplot(table(vector_to_plot), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
   }
   
-  par(mfrow = c(2, 3)) 
+  par(mfrow = c(1, 3)) 
   for (variable in health_disease_variables) {
     create_plots(data, variable, titles[[variable]])
   }
 }
 
-health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "OHRTDX", "OHRTTYPE", "STRKDX")
+health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "STRKDX")
 
 titles_smokers_health_disease <- c(
   ASTHDX = "Asthma Diagnosis (Smokers)",
@@ -532,6 +530,7 @@ titles_non_smokers_health_disease <- c(
 )
 
 create_plots_health_disease(smokers_df, health_disease_variables, titles_smokers_health_disease)
+
 
 create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non_smokers_health_disease)
 
@@ -590,28 +589,47 @@ cont_tables_age = function(data, explanatory_var, var_of_interest,
 
 #smokers and diabetes
 #conditional probabilities, for all observations, and for the last two age groups
-cont_tables(small_df,"ADSMOK42","DIABDX_M18")
-cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64")
-cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+")
-
-#chisquared tests for those tables
-cont_tables(small_df,"ADSMOK42","DIABDX_M18", F) %>% chisq.test(correct = F)
-cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
-cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
-
-# electronic nicotine and diabetes
-#conditional probabilities, for all observations, and for the last two age groups
-cont_tables(small_df,"SDENICPROD","DIABDX_M18")
-cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64")
-cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+")
-
-#chisquared tests for those tables
-cont_tables(small_df,"SDENICPROD","DIABDX_M18", F) %>% chisq.test(correct = F)
-cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
-cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
+# cont_tables(small_df,"ADSMOK42","DIABDX_M18") %>% knitr::kable()
+# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64")
+# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+")
+# 
+# #chisquared tests for those tables
+# cont_tables(small_df,"ADSMOK42","DIABDX_M18", F) %>% chisq.test(correct = F)
+# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
+# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
+# 
+# # electronic nicotine and diabetes
+# #conditional probabilities, for all observations, and for the last two age groups
+# cont_tables(small_df,"SDENICPROD","DIABDX_M18")
+# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64")
+# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+")
+# 
+# #chisquared tests for those tables
+# cont_tables(small_df,"SDENICPROD","DIABDX_M18", F) %>% chisq.test(correct = F)
+# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
+# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
 
 ```
 
+```{r}
+## to do:
+# contingency tables and chisquared test for 2 explanatory vars:
+# ADSMOK42 and SDENICPROD
+# and 3 groups of response variables: general health, physical health, mental health
+
+#starting with ADSMOK42 and physical health
+for(variable in health_disease_variables){
+  if("1 YES" %in% levels(small_df[[variable]])){
+    
+  print("Contingency table")
+  print(cont_tables(small_df, "ADSMOK42", variable))}
+  
+  print("testing hypothesis of no association")
+  
+  print("------------")
+}
+
+```
 
 
 Things to do: 
