@@ -1,0 +1,494 @@
+---
+title: Health Data Science
+output:
+  html_document:
+    fig_caption: yes
+    theme: flatly #sandstone #spacelab #flatly
+    highlight: pygments
+    code_folding: show
+    toc: TRUE
+    toc_depth: 2
+    number_sections: TRUE
+    toc_float:
+      smooth_scroll: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# Only need to run these once:
+#  install.packages("foreign")  
+#  install.packages("tidyverse")
+#  install.packages("readr")
+#  install.packages("readxl")
+#  install.packages("haven")
+#  install.packages("survey")
+#  install.packages("remotes")
+
+
+# Run these every time you re-start R:
+  library(foreign)
+  library(tidyverse)
+  library(readr)
+  library(readxl)
+  library(haven)
+  library(survey)
+  library(remotes)
+#  library(MEPS)
+```
+
+# 1 - First Paragraph
+
+**For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
+
+Comment by Giuseppe:
+
+(I think this topic is too specific and the dataset will not allow us to explore it deeply.
+We would need to have information on older persons that have asthma and their smoking habits when they were young)
+
+I propose we chose a more general topic:
+
+<hr>
+
+**The central question we want to answer is: what are the negative effects of smoking?**
+
+We will look at the association between smoking and health related issues. We 
+will also look at some mental health indicators and how they relate to smoking
+habits.
+
+<hr>
+
+
+*Here is info about characteristics:* <https://meps.ahrq.gov/data_files/publications/st554/stat554.shtml>
+
+*Here is questionary report:* <https://meps.ahrq.gov/survey_comp/hc_survey/paper_quest/2021/2021_SHE_SAQ.pdf>
+
+*Codebook:* <https://meps.ahrq.gov/data_stats/download_data/pufs/h233/h233cb.pdf>
+
+
+```{r}
+# the dataset is in the github repo, we don't need to download it every time
+h233 <- read_dta("h233.dta")
+head(h233)
+```
+
+Our main explanatory variables:
+
+ADSMOK42: currently smokes
+
+ADNSMK42 - If ADSMOK42 = 1, doctor advised you to quit smoking
+
+SDENICPROD: used electronic nicotine product
+
+ADDPRS42: felt down/depressed
+
+ADGENH42: health in general
+
+ADENGY42: had a lot of energy
+
+ADHOPE42: how often felt hopeless
+
+ADNERV42: how often felt nervous
+
+ADPCFL42: felt calm/peaceful
+
+ADSAD42: how often felt sad
+
+AGELAST: person age
+
+ASTHDX: asthma diagnosis
+
+ARTHDX:  had ever been diagnosed with arthritis
+
+CALUNG: lung cancer diagnosed
+
+CHOLDX: high cholesterol diagnosis
+
+CHBRON31: if the person (aged 18 or older) has had chronic bronchitis in the last 12 months
+
+DIABDX_M18: diabetes diagnosis
+
+EMPHDX: Emphysema diagnosis
+
+EMPST31: employment status
+
+FAMINC21: family income
+
+HIBPDX: whether the person had ever been diagnosed as having high blood pressure (other than during pregnancy)
+
+MNHLTH31: perceived mental health status
+
+MARRY21X: marital status
+
+TTLP21X: person total income
+
+OHRTDX: asked if the person had ever been diagnosed with any other kind of heart disease or condition
+
+OHRTTYPE: specify other heart diseases or conditions
+
+RTHLTH31: perceived health status
+
+REGION21:indicate the Census region for the RU. (A Reporting Unit (RU) is a person or group of persons in the sampled DU who are related by blood, marriage, adoption, or other family association. Each RU was interviewed as a single entity for MEPS.)
+
+WLKLIM53: limitation in physical functioning
+
+SDCOMPAN: feel lack of companionship
+
+STRKDX: asked if the person (aged 18 or older) had ever been diagnosed as having had a stroke or transient ischemic attack 
+
+SDLEFTOUT: feel left out
+
+SDLIFE: satisfied with life
+
+SDHOME - How satisfied with house/apartment where person lives
+
+SDISOL - How often feel isolated from others
+
+SEX: gender
+
+SDMEDCARE - Rate neighborhood availability of places to get medical care
+
+SDHLTHFOOD - Rate neighborhood availability of places to buy healthy food
+
+SDHMDEPR - When under 18 years of age, lived with someone who was depressed, mentally ill, or suicidal
+
+SDHMALC - When under 18 years of age, lived with a problem drinker or alcoholic
+
+SDHMDRG - When under 18 years of age, lived with someone who used illegal street drugs or abused prescription medication
+
+SDHMDIV - Parents separated or divorced
+
+SDHMBEAT - How often did parents or adults in home slap, hit, kick, punch, or beat each other up
+
+SDHURTCHLD - How often did parents or adults in home hit, beat, kick, or physically hurt person
+
+FTSTU21X: student status
+
+RACEV2X:race
+
+
+## 46 variables 
+#Variables of interest: ADSMOK42, ADNSMK42, SDENICPROD
+
+#Demograpfical variables: AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31
+
+#Mental health: ADDPRS42, ADHOPE42, ADNERV42, ADPCFL42, ADSAD42, MNHLTH31
+
+#General health: ADGENH42, ADENGY42, RTHLTH31, WLKLIM53
+
+#Health deseases: ASTHDX, ARTHDX, CALUNG, CHOLDX, CHBRON31, DIABDX_M18, EMPHDX, HIBPDX, OHRTDX, OHRTTYPE, STRKDX
+
+#The Social Determinants of Health Survey (SDOH) includes questions about the social determinants of health, such as housing, financial well-being, food security, social support, discrimination, and physical and sexual violence.: SDLIFE, SDHOME, SDMEDCARE, SDHLTHFOOD, SDCOMPAN, SDLEFTOUT, SDISOL, SDHMDEPR, SDHMALC, SDHMDRG, SDHMDIV, SDHMBEAT, SDHURTCHLD
+
+```{r}
+vars_to_keep = c("ADSMOK42","SDENICPROD","ADDPRS42","ADGENH42",
+                 "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42",
+                 "AGELAST","ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX",
+                 "FAMINC21","HIBPDX","MNHLTH31","RTHLTH31","TTLP21X",
+                 "WLKLIM53","SDCOMPAN","SDLEFTOUT","SDLIFE", 'REGION21', 'RACEV2X', 
+                 'FTSTU21X', 'SEX','STRKDX','HIBPDX', 'MARRY21X','CHBRON31' ,'CANCERDX', 
+                 'ARTHDX', 'ADNSMK42', 'SDHOME', 'SDMEDCARE','SDHLTHFOOD', 'SDISOL',
+                 'SDHMDEPR','SDHMALC','SDHMDRG', 'SDHMDIV', 'SDHMBEAT', 'SDHURTCHLD', 'EMPST31')
+
+small_df = h233 %>% select(all_of(vars_to_keep)) %>% as_factor()
+#turning the variables into factors
+
+small_df = small_df %>% mutate(age_group = cut(AGELAST,
+                                    breaks = c(-Inf,18, 25, 35, 45, 65, Inf),
+                  labels = c("0-18","18-24", "25-34", "35-44", "45-64", "65+"),
+                  right = FALSE))
+#adding a new variable to break into age groups
+
+small_df %>% summary()
+
+```
+
+
+# Descriptive statistics
+
+```{r}
+# I found some inconsistencies in the data set:
+small_df %>% select(ADSMOK42, ADNSMK42) %>%
+  reframe(smokes = factor(ADSMOK42), how_often = factor(ADNSMK42)) %>%
+  table() %>% knitr::kable()
+
+```
+ADSMOK42 is the code about the people that are currently smoking. 
+ADNSMK42 is the code ADSMOK42 = 1, doctor advised you to quit smoking
+
+#Descriptive graphs 
+
+```{r}
+
+# I tried to recreate the previous graph but adding more information -Giuseppe
+small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
+  summarise(n_smokers = sum(ADSMOK42 == "1 YES"),
+            n_non_smokers = sum(ADSMOK42 == "2 NO"),
+            n_inapplicable = sum(ADSMOK42 == "-1 INAPPLICABLE")) %>%
+  mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
+  slice(-1) %>%
+  ggplot(aes(x = age_group)) +
+  geom_col(aes(y = n_non_smokers, fill = "non smokers")) +
+  geom_col(aes(y = n_smokers, fill = "smokers")) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
+  labs(title = "Age distribution of smokers and non smokers",
+       y = "count", x = "age group", fill = "") + theme_classic()
+
+# e-smokers 
+small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
+  summarise(n_smokers = sum(SDENICPROD == "1 YES"),
+            n_non_smokers = sum(SDENICPROD == "2 NO"),
+            n_inapplicable = sum(SDENICPROD == "-1 INAPPLICABLE")) %>%
+  mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
+  slice(-1) %>%
+  ggplot(aes(x = age_group)) +
+  geom_col(aes(y = n_non_smokers, fill = "non e-sigarets smokers")) +
+  geom_col(aes(y = n_smokers, fill = "e-sigarets smokers")) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
+  labs(title = "Age distribution of e-sigarets smokers and non smokers",
+       y = "count", x = "age group", fill = "") + theme_classic()
+
+```
+#Working on the demograpthical characteristics 
+
+#For smokers 
+```{r}
+small_df <- small_df %>%
+  mutate(
+    sex_group = case_when(
+      SEX == '1 MALE' ~ 'MALE',
+      SEX == '2 FEMALE' ~ 'FEMALE',
+      TRUE ~ NA_character_
+    )
+  )
+smokers_df <- small_df %>% filter(ADSMOK42 == "1 YES")
+
+non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
+
+```
+
+
+
+```{r}
+#demographic characteristics
+create_plots_demogr <- function(data, demographic_variables, titles) {
+  data <- data %>%
+    mutate(
+      tot_inc_group = cut(TTLP21X,
+                          breaks = c(-Inf, 10000, 15000, 20000, 25000, 30000, Inf),
+                          labels = c("0-10000", "10001-15000", "15001-20000", "20001-25000", "25001-30000", "30000+"),
+                          right = FALSE),
+      fam_inc_group = cut(FAMINC21,
+                          breaks = c(-Inf, 10000, 15000, 20000, 25000, 30000, Inf),
+                          labels = c("0-10000", "10001-15000", "15001-20000", "20001-25000", "25001-30000", "30000+"),
+                          right = FALSE)
+    ) %>%
+    filter(!is.na(tot_inc_group) & !is.na(fam_inc_group) & !is.na(sex_group)) %>%
+    filter(tot_inc_group != "NA")
+  
+  create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(1, 3)) 
+  for (variable in demographic_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+demographic_variables <- c("age_group", "REGION21", "sex_group", "RACEV2X", "MARRY21X", "FTSTU21X", "tot_inc_group", "fam_inc_group", "EMPST31")
+
+titles_smokers <- c(
+  age_group = "Age Group Distribution (Smokers)",
+  REGION21 = "Region Distribution (Smokers)",
+  sex_group = "Gender Distribution (Smokers)",
+  RACEV2X = "Race Distribution (Smokers)",
+  MARRY21X = "Marital Status Distribution (Smokers)",
+  FTSTU21X = "Full-Time Student Distribution (Smokers)",
+  tot_inc_group = "Total Income Distribution (Smokers)",
+  fam_inc_group = "Family Income Distribution (Smokers)",
+  EMPST31 = "Employment Status Distribution (Smokers)"
+)
+
+titles_non_smokers <- c(
+  age_group = "Age Group Distribution (Non-Smokers)",
+  REGION21 = "Region Distribution (Non-Smokers)",
+  sex_group = "Gender Distribution (Non-Smokers)",
+  RACEV2X = "Race Distribution (Non-Smokers)",
+  MARRY21X = "Marital Status Distribution (Non-Smokers)",
+  FTSTU21X = "Full-Time Student Distribution (Non-Smokers)",
+  tot_inc_group = "Total Income Distribution (Non-Smokers)",
+  fam_inc_group = "Family Income Distribution (Non-Smokers)",
+  EMPST31 = "Employment Status Distribution (Non-Smokers)"
+)
+
+
+create_plots_demogr(smokers_df, demographic_variables, titles_smokers)
+
+create_plots_demogr(non_smokers_df, demographic_variables, titles_non_smokers)
+
+```
+```{r}
+#mental health
+create_plots_mental_health <- function(data, mental_health_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+ create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(1, 3)) 
+  for (variable in mental_health_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+mental_health_variables <- c("ADDPRS42", "ADHOPE42", "ADNERV42", "ADPCFL42", "ADSAD42", "MNHLTH31")
+
+
+titles_smokers_mental_health <- c(
+  ADDPRS42 = "Perceived Stress (Smokers)",
+  ADHOPE42 = "Hopefulness (Smokers)",
+  ADNERV42 = "Nervousness (Smokers)",
+  ADPCFL42 = "Psychological Fatigue (Smokers)",
+  ADSAD42 = "Sadness (Smokers)",
+  MNHLTH31 = "Mental Health Status (Smokers)"
+)
+
+titles_non_smokers_mental_health <- c(
+  ADDPRS42 = "Perceived Stress (Non-Smokers)",
+  ADHOPE42 = "Hopefulness (Non-Smokers)",
+  ADNERV42 = "Nervousness (Non-Smokers)",
+  ADPCFL42 = "Psychological Fatigue (Non-Smokers)",
+  ADSAD42 = "Sadness (Non-Smokers)",
+  MNHLTH31 = "Mental Health Status (Non-Smokers)"
+)
+
+create_plots_mental_health(smokers_df, mental_health_variables, titles_smokers_mental_health)
+
+create_plots_mental_health(non_smokers_df, mental_health_variables, titles_non_smokers_mental_health)
+
+```
+
+
+```{r}
+create_plots_general_health <- function(data, general_health_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(1, 2)) 
+  for (variable in general_health_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+general_health_variables <- c("ADGENH42", "ADENGY42", "RTHLTH31", "WLKLIM53")
+
+
+titles_smokers_general_health <- c(
+  ADGENH42 = "General Health Perception (Smokers)",
+  ADENGY42 = "Energy Level (Smokers)",
+  RTHLTH31 = "Overall Health Rating (Smokers)",
+  WLKLIM53 = "Walking Limitation (Smokers)"
+)
+
+titles_non_smokers_general_health <- c(
+  ADGENH42 = "General Health Perception (Non-Smokers)",
+  ADENGY42 = "Energy Level (Non-Smokers)",
+  RTHLTH31 = "Overall Health Rating (Non-Smokers)",
+  WLKLIM53 = "Walking Limitation (Non-Smokers)"
+)
+
+create_plots_general_health(smokers_df, general_health_variables, titles_smokers_general_health)
+
+create_plots_general_health(non_smokers_df, general_health_variables, titles_non_smokers_general_health)
+
+```
+```{r, eval=FALSE}
+#deseases
+create_plots_health_disease <- function(data, health_disease_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(2, 3)) 
+  for (variable in health_disease_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "OHRTDX", "OHRTTYPE", "STRKDX")
+
+titles_smokers_health_disease <- c(
+  ASTHDX = "Asthma Diagnosis (Smokers)",
+  ARTHDX = "Arthritis Diagnosis (Smokers)",
+  CALUNG = "Lung Cancer Diagnosis (Smokers)",
+  CHOLDX = "Cholesterol Diagnosis (Smokers)",
+  CHBRON31 = "Chronic Bronchitis Diagnosis (Smokers)",
+  DIABDX_M18 = "Diabetes Diagnosis (Smokers)",
+  EMPHDX = "Emphysema Diagnosis (Smokers)",
+  HIBPDX = "High Blood Pressure Diagnosis (Smokers)",
+  OHRTDX = "Heart Disease Diagnosis (Smokers)",
+  OHRTTYPE = "Type of Heart Disease Diagnosis (Smokers)",
+  STRKDX = "Stroke Diagnosis (Smokers)"
+)
+
+titles_non_smokers_health_disease <- c(
+  ASTHDX = "Asthma Diagnosis (Non-Smokers)",
+  ARTHDX = "Arthritis Diagnosis (Non-Smokers)",
+  CALUNG = "Lung Cancer Diagnosis (Non-Smokers)",
+  CHOLDX = "Cholesterol Diagnosis (Non-Smokers)",
+  CHBRON31 = "Chronic Bronchitis Diagnosis (Non-Smokers)",
+  DIABDX_M18 = "Diabetes Diagnosis (Non-Smokers)",
+  EMPHDX = "Emphysema Diagnosis (Non-Smokers)",
+  HIBPDX = "High Blood Pressure Diagnosis (Non-Smokers)",
+  OHRTDX = "Heart Disease Diagnosis (Non-Smokers)",
+  OHRTTYPE = "Type of Heart Disease Diagnosis (Non-Smokers)",
+  STRKDX = "Stroke Diagnosis (Non-Smokers)"
+)
+
+create_plots_health_disease(smokers_df, health_disease_variables, titles_smokers_health_disease)
+
+create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non_smokers_health_disease)
+
+```
+
+```{r, eval=FALSE}
+contingency_tables <- list()
+for (variable in mental_health_variables) {
+  contingency_table <- table(small_df$ADDPRS42, small_df[[variable]])
+  
+  contingency_tables_smokers[[variable]] <- contingency_table
+}
+
+for (i in seq_along(contingency_tables)) {
+  cat("Contingency Table for Smokers -", names(contingency_tables)[i], ":\n")
+  print(contingency_tables[[i]])
+}
+
+```
+
+
+Things to do: 
+- 1 Introduction
+- 2 Exploratory analysis: go deep into the dataset analyzing the most important
+    variables.
+- 3 Effect of smoking/nicotine on physical health: understand how much is dangerous 
+    the abuse of smoke for the Pysichal healt
+- 4 Effect of smoking/nicotine on mental health:understand how much is dangerous 
+    the abuse of smoke for the mental healt
+- 5 Conclusion
