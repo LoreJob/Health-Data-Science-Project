@@ -414,7 +414,7 @@ create_plots_general_health(smokers_df, general_health_variables, titles_smokers
 create_plots_general_health(non_smokers_df, general_health_variables, titles_non_smokers_general_health)
 
 ```
-```{r}
+```{r, eval=FALSE}
 #deseases
 create_plots_health_disease <- function(data, health_disease_variables, titles) {
   data <- data %>%
@@ -467,7 +467,7 @@ create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 contingency_tables <- list()
 for (variable in mental_health_variables) {
   contingency_table <- table(small_df$ADDPRS42, small_df[[variable]])
