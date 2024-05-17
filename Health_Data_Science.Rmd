@@ -415,7 +415,7 @@ create_plots_general_health(non_smokers_df, general_health_variables, titles_non
 
 ```
 ```{r}
-
+#deseases
 create_plots_health_disease <- function(data, health_disease_variables, titles) {
   data <- data %>%
     filter(!is.na(sex_group))
@@ -464,6 +464,21 @@ titles_non_smokers_health_disease <- c(
 create_plots_health_disease(smokers_df, health_disease_variables, titles_smokers_health_disease)
 
 create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non_smokers_health_disease)
+
+```
+
+```{r}
+contingency_tables <- list()
+for (variable in mental_health_variables) {
+  contingency_table <- table(small_df$ADDPRS42, small_df[[variable]])
+  
+  contingency_tables_smokers[[variable]] <- contingency_table
+}
+
+for (i in seq_along(contingency_tables)) {
+  cat("Contingency Table for Smokers -", names(contingency_tables)[i], ":\n")
+  print(contingency_tables[[i]])
+}
 
 ```
 
