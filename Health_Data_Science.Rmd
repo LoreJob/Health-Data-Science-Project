@@ -479,7 +479,7 @@ create_plots_general_health(e_smokers_df, general_health_variables, titles_e_smo
 
 *Little another picture for e-smokers.Their energy level some times lower and distribution on overall health rate is higher tan for smokers and non-smokers. 45% don't have a walking limitations
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 #deseases
 create_plots_health_disease <- function(data, health_disease_variables, titles) {
   data <- data %>%
@@ -536,22 +536,9 @@ create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non
 
 ```
 
-```{r, eval=FALSE}
-contingency_tables <- list()
-for (variable in mental_health_variables) {
-  contingency_table <- table(small_df$ADDPRS42, small_df[[variable]])
-  
-  contingency_tables_smokers[[variable]] <- contingency_table
-}
+## Contingency Tables
 
-for (i in seq_along(contingency_tables)) {
-  cat("Contingency Table for Smokers -", names(contingency_tables)[i], ":\n")
-  print(contingency_tables[[i]])
-}
-
-```
-
-```{r}
+```{r, include= FALSE}
 # defining functions to create contingency tables and chisquared tests
 
 # this one takes two variables and returns the table
@@ -618,15 +605,31 @@ cont_tables_age = function(data, explanatory_var, var_of_interest,
 # and 3 groups of response variables: general health, physical health, mental health
 
 #starting with ADSMOK42 and physical health
+
+titles_health_disease <- c(
+  ASTHDX = "Asthma Diagnosis",
+  ARTHDX = "Arthritis Diagnosis",
+  CALUNG = "Lung Cancer Diagnosis",
+  CHOLDX = "Cholesterol Diagnosis",
+  CHBRON31 = "Chronic Bronchitis Diagnosis",
+  DIABDX_M18 = "Diabetes Diagnosis",
+  EMPHDX = "Emphysema Diagnosis",
+  HIBPDX = "High Blood Pressure Diagnosis",
+  OHRTDX = "Heart Disease Diagnosis",
+  OHRTTYPE = "Type of Heart Disease Diagnosis",
+  STRKDX = "Stroke Diagnosis"
+)
+
 for(variable in health_disease_variables){
   if("1 YES" %in% levels(small_df[[variable]])){
-    
+  print(titles_health_disease[variable])
   print("Contingency table")
-  print(cont_tables(small_df, "ADSMOK42", variable))}
-  
+  print(cont_tables(small_df, "ADSMOK42", variable)%>% round(digits=3))
   print("testing hypothesis of no association")
-  
+  print(cont_tables(small_df, "ADSMOK42", variable,F)%>% chisq.test(correct = F))
   print("------------")
+  }
+
 }
 
 ```
