@@ -255,6 +255,14 @@ small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
 
 #For smokers 
 ```{r}
+small_df <- small_df %>%
+  mutate(
+    sex_group = case_when(
+      SEX == '1 MALE' ~ 'MALE',
+      SEX == '2 FEMALE' ~ 'FEMALE',
+      TRUE ~ NA_character_
+    )
+  )
 smokers_df <- small_df %>% filter(ADSMOK42 == "1 YES")
 
 non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
@@ -264,7 +272,8 @@ non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
 
 
 ```{r}
-create_plots_demogr <- function(data, demographic_variables) {
+#demographic characteristics
+create_plots_demogr <- function(data, demographic_variables, titles) {
   data <- data %>%
     mutate(
       tot_inc_group = cut(TTLP21X,
@@ -276,25 +285,186 @@ create_plots_demogr <- function(data, demographic_variables) {
                           labels = c("0-10000", "10001-15000", "15001-20000", "20001-25000", "25001-30000", "30000+"),
                           right = FALSE)
     ) %>%
-    filter(!is.na(tot_inc_group) & !is.na(fam_inc_group) & !is.na(SEX)) %>%
+    filter(!is.na(tot_inc_group) & !is.na(fam_inc_group) & !is.na(sex_group)) %>%
     filter(tot_inc_group != "NA")
   
-  create_plots <- function(data, variable) {
+  create_plots <- function(data, variable, title) {
     my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
-    barplot(table(data[[variable]]), main = variable, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col=my_colors)
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
   }
   
   par(mfrow = c(1, 3)) 
   for (variable in demographic_variables) {
-    create_plots(data, variable)
+    create_plots(data, variable, titles[[variable]])
   }
 }
 
-# Plot for smokers
-create_plots_demogr(smokers_df, demographic_variables)
+demographic_variables <- c("age_group", "REGION21", "sex_group", "RACEV2X", "MARRY21X", "FTSTU21X", "tot_inc_group", "fam_inc_group", "EMPST31")
 
-# Plot for non-smokers
-create_plots_demogr(non_smokers_df, demographic_variables)
+titles_smokers <- c(
+  age_group = "Age Group Distribution (Smokers)",
+  REGION21 = "Region Distribution (Smokers)",
+  sex_group = "Gender Distribution (Smokers)",
+  RACEV2X = "Race Distribution (Smokers)",
+  MARRY21X = "Marital Status Distribution (Smokers)",
+  FTSTU21X = "Full-Time Student Distribution (Smokers)",
+  tot_inc_group = "Total Income Distribution (Smokers)",
+  fam_inc_group = "Family Income Distribution (Smokers)",
+  EMPST31 = "Employment Status Distribution (Smokers)"
+)
+
+titles_non_smokers <- c(
+  age_group = "Age Group Distribution (Non-Smokers)",
+  REGION21 = "Region Distribution (Non-Smokers)",
+  sex_group = "Gender Distribution (Non-Smokers)",
+  RACEV2X = "Race Distribution (Non-Smokers)",
+  MARRY21X = "Marital Status Distribution (Non-Smokers)",
+  FTSTU21X = "Full-Time Student Distribution (Non-Smokers)",
+  tot_inc_group = "Total Income Distribution (Non-Smokers)",
+  fam_inc_group = "Family Income Distribution (Non-Smokers)",
+  EMPST31 = "Employment Status Distribution (Non-Smokers)"
+)
+
+
+create_plots_demogr(smokers_df, demographic_variables, titles_smokers)
+
+create_plots_demogr(non_smokers_df, demographic_variables, titles_non_smokers)
+
+```
+```{r}
+#mental health
+create_plots_mental_health <- function(data, mental_health_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+ create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(1, 3)) 
+  for (variable in mental_health_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+mental_health_variables <- c("ADDPRS42", "ADHOPE42", "ADNERV42", "ADPCFL42", "ADSAD42", "MNHLTH31")
+
+
+titles_smokers_mental_health <- c(
+  ADDPRS42 = "Perceived Stress (Smokers)",
+  ADHOPE42 = "Hopefulness (Smokers)",
+  ADNERV42 = "Nervousness (Smokers)",
+  ADPCFL42 = "Psychological Fatigue (Smokers)",
+  ADSAD42 = "Sadness (Smokers)",
+  MNHLTH31 = "Mental Health Status (Smokers)"
+)
+
+titles_non_smokers_mental_health <- c(
+  ADDPRS42 = "Perceived Stress (Non-Smokers)",
+  ADHOPE42 = "Hopefulness (Non-Smokers)",
+  ADNERV42 = "Nervousness (Non-Smokers)",
+  ADPCFL42 = "Psychological Fatigue (Non-Smokers)",
+  ADSAD42 = "Sadness (Non-Smokers)",
+  MNHLTH31 = "Mental Health Status (Non-Smokers)"
+)
+
+create_plots_mental_health(smokers_df, mental_health_variables, titles_smokers_mental_health)
+
+create_plots_mental_health(non_smokers_df, mental_health_variables, titles_non_smokers_mental_health)
+
+```
+
+
+```{r}
+create_plots_general_health <- function(data, general_health_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(1, 2)) 
+  for (variable in general_health_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+general_health_variables <- c("ADGENH42", "ADENGY42", "RTHLTH31", "WLKLIM53")
+
+
+titles_smokers_general_health <- c(
+  ADGENH42 = "General Health Perception (Smokers)",
+  ADENGY42 = "Energy Level (Smokers)",
+  RTHLTH31 = "Overall Health Rating (Smokers)",
+  WLKLIM53 = "Walking Limitation (Smokers)"
+)
+
+titles_non_smokers_general_health <- c(
+  ADGENH42 = "General Health Perception (Non-Smokers)",
+  ADENGY42 = "Energy Level (Non-Smokers)",
+  RTHLTH31 = "Overall Health Rating (Non-Smokers)",
+  WLKLIM53 = "Walking Limitation (Non-Smokers)"
+)
+
+create_plots_general_health(smokers_df, general_health_variables, titles_smokers_general_health)
+
+create_plots_general_health(non_smokers_df, general_health_variables, titles_non_smokers_general_health)
+
+```
+```{r}
+
+create_plots_health_disease <- function(data, health_disease_variables, titles) {
+  data <- data %>%
+    filter(!is.na(sex_group))
+  
+create_plots <- function(data, variable, title) {
+    my_colors <- c("skyblue", "salmon", "lightgreen", "lightpink", "lightblue", "lightcoral")
+    barplot(table(data[[variable]]), main = title, xlab = variable, ylab = "Frequency", las = 2, cex.names = 0.8, col = my_colors)
+  }
+  
+  par(mfrow = c(2, 3)) 
+  for (variable in health_disease_variables) {
+    create_plots(data, variable, titles[[variable]])
+  }
+}
+
+health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "OHRTDX", "OHRTTYPE", "STRKDX")
+
+titles_smokers_health_disease <- c(
+  ASTHDX = "Asthma Diagnosis (Smokers)",
+  ARTHDX = "Arthritis Diagnosis (Smokers)",
+  CALUNG = "Lung Cancer Diagnosis (Smokers)",
+  CHOLDX = "Cholesterol Diagnosis (Smokers)",
+  CHBRON31 = "Chronic Bronchitis Diagnosis (Smokers)",
+  DIABDX_M18 = "Diabetes Diagnosis (Smokers)",
+  EMPHDX = "Emphysema Diagnosis (Smokers)",
+  HIBPDX = "High Blood Pressure Diagnosis (Smokers)",
+  OHRTDX = "Heart Disease Diagnosis (Smokers)",
+  OHRTTYPE = "Type of Heart Disease Diagnosis (Smokers)",
+  STRKDX = "Stroke Diagnosis (Smokers)"
+)
+
+titles_non_smokers_health_disease <- c(
+  ASTHDX = "Asthma Diagnosis (Non-Smokers)",
+  ARTHDX = "Arthritis Diagnosis (Non-Smokers)",
+  CALUNG = "Lung Cancer Diagnosis (Non-Smokers)",
+  CHOLDX = "Cholesterol Diagnosis (Non-Smokers)",
+  CHBRON31 = "Chronic Bronchitis Diagnosis (Non-Smokers)",
+  DIABDX_M18 = "Diabetes Diagnosis (Non-Smokers)",
+  EMPHDX = "Emphysema Diagnosis (Non-Smokers)",
+  HIBPDX = "High Blood Pressure Diagnosis (Non-Smokers)",
+  OHRTDX = "Heart Disease Diagnosis (Non-Smokers)",
+  OHRTTYPE = "Type of Heart Disease Diagnosis (Non-Smokers)",
+  STRKDX = "Stroke Diagnosis (Non-Smokers)"
+)
+
+create_plots_health_disease(smokers_df, health_disease_variables, titles_smokers_health_disease)
+
+create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non_smokers_health_disease)
+
 ```
 
 
