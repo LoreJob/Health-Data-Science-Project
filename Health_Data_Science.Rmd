@@ -414,6 +414,8 @@ create_plots_general_health(smokers_df, general_health_variables, titles_smokers
 create_plots_general_health(non_smokers_df, general_health_variables, titles_non_smokers_general_health)
 
 ```
+
+
 ```{r, eval=FALSE}
 #deseases
 create_plots_health_disease <- function(data, health_disease_variables, titles) {
@@ -481,6 +483,67 @@ for (i in seq_along(contingency_tables)) {
 }
 
 ```
+
+```{r}
+# defining functions to create contingency tables and chisquared tests
+
+# this one takes two variables and returns the table
+cont_tables = function(data, explanatory_var, var_of_interest, cond_prob = T){
+  tbl = data %>%
+    select(explanatory_var,var_of_interest) %>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  if (cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+  }
+  tbl
+}
+
+#this one takes two variables and an age group, allowing to check separately
+#different ages
+cont_tables_age = function(data, explanatory_var, var_of_interest,
+                           age_bracket, cond_prob = T){
+  tbl = data %>% filter(age_group == age_bracket) %>%
+    select(explanatory_var,var_of_interest) %>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  
+  if(cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+    }
+  tbl
+}
+
+#testing the functions
+
+#smokers and diabetes
+#conditional probabilities, for all observations, and for the last two age groups
+cont_tables(small_df,"ADSMOK42","DIABDX_M18")
+cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64")
+cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+")
+
+#chisquared tests for those tables
+cont_tables(small_df,"ADSMOK42","DIABDX_M18", F) %>% chisq.test(correct = F)
+cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
+cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
+
+# electronic nicotine and diabetes
+#conditional probabilities, for all observations, and for the last two age groups
+cont_tables(small_df,"SDENICPROD","DIABDX_M18")
+cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64")
+cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+")
+
+#chisquared tests for those tables
+cont_tables(small_df,"SDENICPROD","DIABDX_M18", F) %>% chisq.test(correct = F)
+cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
+cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
+
+```
+
 
 
 Things to do: 
