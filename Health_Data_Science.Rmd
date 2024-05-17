@@ -267,12 +267,15 @@ smokers_df <- small_df %>% filter(ADSMOK42 == "1 YES")
 
 non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
 
+e_smokers_df <-small_df %>% filter(SDENICPROD == "1 YES")
+
 ```
 
-
+#Demograpthic characteristics 
+##Difference between smokers and non-smokers 
 
 ```{r}
-#demographic characteristics
+
 create_plots_demogr <- function(data, demographic_variables, titles) {
   data <- data %>%
     mutate(
@@ -331,6 +334,45 @@ create_plots_demogr(smokers_df, demographic_variables, titles_smokers)
 create_plots_demogr(non_smokers_df, demographic_variables, titles_non_smokers)
 
 ```
+**Highlights**
+*A collective image of smokers:*
+* 40% are 45-64 y.o.
+* 44% living in South region, ~22% in Midwest and ~22% in West
+* 49% of male and 51% of female
+* 70% of white race and 22% of black
+* 32% never married, 31% married, just 21% divorced and 10% widowed
+* 4% not a students, 1% full-time student, 0,31% part-time students
+* Mean of total income is 30586, ~51% earn 30000+, ~25% earn less than 10000
+* Mean of total income of family is 50665, 55% earn 30000+, other family's income distributed gradually in income range
+* 50% are not employed during RD, 46% employed
+
+*A collective image of non-smokers:*
+* 36% are 65+ y.o., 31% are 45-64 y.o.
+* 37% living in South region, 22% in Midwest and ~26% in West
+* 56% of male and 44% of female
+* 79% of white race and 11% of black
+* 24% never married, 50% married, just 14% divorced and 10% widowed
+* 4% not a students, 2,6 % full-time student, 0,04% part-time students
+* Mean of total income is 47740, ~55% earn 30000+
+* Mean of total income of family is 85484 , 44% earn 30000+,other family's income distributed gradually in income range
+* 45% are not employed during RD, 53% employed
+
+The distribution through smoker, who smokes because of doctor recommendation 
+```{r}
+ggplot(smokers_df, aes(x = ADNSMK42)) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Distribution of Smokers by Doctor's Recommendation", x = "Doctor's Recommendation", y = "Frequency")
+```
+*The 38% of currently smokers smokes because of doctor advise to quit smoke*
+
+The distribution of e-smokers in full data and through smokers
+```{r}
+ggplot(smokers_df, aes(x = SDENICPROD == "1 YES")) +
+  geom_bar(fill = "lightcoral") +
+  labs(title = "Distribution of e-Smokers through currently smokers", x = "E-smokers No/Yes", y = "Frequency")
+```
+*Trough currently smokers just 21% are e-sigarets smokers*
+
 ```{r}
 #mental health
 create_plots_mental_health <- function(data, mental_health_variables, titles) {
@@ -369,11 +411,25 @@ titles_non_smokers_mental_health <- c(
   MNHLTH31 = "Mental Health Status (Non-Smokers)"
 )
 
+titles_e_smokers_mental_health <- c(
+  ADDPRS42 = "Perceived Stress (E-Smokers)",
+  ADHOPE42 = "Hopefulness (E-Smokers)",
+  ADNERV42 = "Nervousness (E-Smokers)",
+  ADPCFL42 = "Psychological Fatigue (E-Smokers)",
+  ADSAD42 = "Sadness (E-Smokers)",
+  MNHLTH31 = "Mental Health Status (E-Smokers)"
+)
 create_plots_mental_health(smokers_df, mental_health_variables, titles_smokers_mental_health)
-
 create_plots_mental_health(non_smokers_df, mental_health_variables, titles_non_smokers_mental_health)
-
+create_plots_mental_health(e_smokers_df, mental_health_variables, titles_e_smokers_mental_health)
 ```
+*Highlights*
+
+* Mostly smokers don't perceived stress, hopefulness and sadness, nervousness mostly also no, but 25% little of the time. 36% of smokers little of the time have psychological fatigue. 35% smokers have a goog mental health, 24% very good mental health, 21% excellent and just 14% fair.
+
+*In comparison, non-smokers mostly don't feel perceived stress, hopefulness and sadness. However, that mental health status is better: 40% have very good, 28% excellent and 28% good, just 7% fair.
+
+*Another picture for e-smokers: mostly of them don't have perceived stress and hopefulness, but 24% fill little of time nervous and 15% some of the time. 27% little of the time have psychological fatigue, ~16% have it most of the time. Overall, 14% feel fair, mental health is more than less good or excellent. 
 
 
 ```{r}
@@ -409,12 +465,24 @@ titles_non_smokers_general_health <- c(
   WLKLIM53 = "Walking Limitation (Non-Smokers)"
 )
 
+titles_e_smokers_general_health <- c(
+  ADGENH42 = "General Health Perception (E-Smokers)",
+  ADENGY42 = "Energy Level (E-Smokers)",
+  RTHLTH31 = "Overall Health Rating (E-Smokers)",
+  WLKLIM53 = "Walking Limitation (E-Smokers)"
+)
+
+
 create_plots_general_health(smokers_df, general_health_variables, titles_smokers_general_health)
 
 create_plots_general_health(non_smokers_df, general_health_variables, titles_non_smokers_general_health)
-
+create_plots_general_health(e_smokers_df, general_health_variables, titles_e_smokers_general_health)
 ```
+*Highlights:*
 
+* General health perception of smokers and non-smokers quite similar (good or very-good mostly).Same for energy level and overall health, 38% of them don't have a walking limitations.
+
+*Little another picture for e-smokers.Their energy level some times lower and distribution on overall health rate is higher tan for smokers and non-smokers. 45% don't have a walking limitations
 
 ```{r, eval=FALSE}
 #deseases
