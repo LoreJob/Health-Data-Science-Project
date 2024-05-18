@@ -203,6 +203,8 @@ small_df = small_df %>% mutate(age_group = cut(AGELAST,
 
 small_df %>% summary()
 
+
+
 ```
 
 
@@ -504,5 +506,346 @@ Trying to asses best demografic variables:
 new_dem_var = c("TTLP21X", "FAMINC21", "age_group", "REGION21", "sex_group", "RACEV2X", "MARRY21X", "FTSTU21X", "EMPST31")
 
 forward_AIC(small_df, new_dem_var, "ADSMOK42")
+```
+
+
+
+## Logistic regression for physical health
+
+### Lung Cancer 
+
+```{r}
+values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPPLICABLE")
+
+filter_df <-small_df %>% select(CALUNG, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(CALUNG ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+### Asthma 
+```{r}
+filter_df <-small_df %>% select(ASTHDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ASTHDX <- relevel(filter_df$ASTHDX, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ASTHDX ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+### Arthritis (we need to discuss)
+```{r}
+values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPPLICABLE")
+
+filter_df <-small_df %>% select(ARTHDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ARTHDX <- relevel(filter_df$ARTHDX, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ARTHDX ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+### High Cholesterol (need to discuss)
+```{r}
+filter_df <-small_df %>% select(CHOLDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$CHOLDX <- relevel(filter_df$CHOLDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+# filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(CHOLDX ~ ADSMOK42 * SEX, data = filter_df, family = "binomial")
+
+summary(fit)
+
+```
+
+
+### Chronic Bronchitis
+```{r}
+filter_df <-small_df %>% select(CHBRON31, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$CHBRON31 <- relevel(filter_df$CHBRON31, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(CHBRON31 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+### Diabetes (need to discuss)
+
+```{r}
+filter_df <-small_df %>% select(DIABDX_M18, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$DIABDX_M18 <- relevel(filter_df$DIABDX_M18, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(DIABDX_M18 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+### Emphisema
+
+```{r}
+filter_df <-small_df %>% select(EMPHDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$EMPHDX <- relevel(filter_df$EMPHDX, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(EMPHDX ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+### High Blood Pressure (need to discuss)
+```{r}
+filter_df <-small_df %>% select(HIBPDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$HIBPDX <- relevel(filter_df$HIBPDX, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(HIBPDX ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+
+### Stroke or Transient Ischemic Attack (need to discuss)
+```{r}
+filter_df <-small_df %>% select(STRKDX, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$STRKDX <- relevel(filter_df$STRKDX, ref = "1 YES")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(STRKDX ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+## Mental Health
+
+### Depression
+
+```{r}
+filter_df <-small_df %>% select(ADDPRS42, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+unique(small_df$ADDPRS42)
+filter_df$ADDPRS42 <- relevel(filter_df$ADDPRS42, ref = "0 NOT AT ALL")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ADDPRS42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$ADDPRS42 <- relevel(filter_df$ADDPRS42, ref = "3 NEARLY EVERY DAY")
+fit <- glm(ADDPRS42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+```
+
+
+### Feeling Hopeless
+```{r}
+filter_df <-small_df %>% select(ADHOPE42, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ADHOPE42 <- relevel(filter_df$ADHOPE42, ref = "0 NONE OF THE TIME")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ADHOPE42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$ADHOPE42 <- relevel(filter_df$ADHOPE42, ref = "4 ALL OF THE TIME")
+fit <- glm(ADHOPE42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+```
+
+
+### Feeling Nervous 
+
+```{r}
+filter_df <-small_df %>% select(ADNERV42, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ADNERV42 <- relevel(filter_df$ADNERV42, ref = "0 NONE OF THE TIME")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ADNERV42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$ADNERV42 <- relevel(filter_df$ADNERV42, ref = "4 ALL OF THE TIME")
+fit <- glm(ADNERV42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+```
+
+### Calm Peacful
+
+```{r}
+filter_df <-small_df %>% select(ADPCFL42, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ADPCFL42 <- relevel(filter_df$ADPCFL42, ref = "1 ALL OF THE TIME")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ADPCFL42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$ADPCFL42 <- relevel(filter_df$ADPCFL42, ref = "6 NONE OF THE TIME")
+fit <- glm(ADPCFL42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+
+```
+
+### Feeling Sad
+
+```{r}
+filter_df <-small_df %>% select(ADSAD42, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$ADSAD42 <- relevel(filter_df$ADSAD42, ref = "0 NONE OF THE TIME")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(ADSAD42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$ADSAD42 <- relevel(filter_df$ADSAD42, ref = "4 ALL OF THE TIME")
+fit <- glm(ADSAD42 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+
+```
+
+### Perceived Mental Health Status
+
+```{r}
+filter_df <-small_df %>% select(MNHLTH31, ADSMOK42, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "1 EXCELLENT")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(MNHLTH31 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "5 POOR")
+fit <- glm(MNHLTH31 ~ ADSMOK42 * SEX * age_group, data = filter_df, family = "binomial")
+summary(fit)
+```
+
+
+### Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
+
+```{r}
+new_df <- small_df %>% select(ASTHDX, SDENICPROD, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+new_df <- new_df %>%  filter(age_group == "18-24")
+
+new_df$ASTHDX <- relevel(new_df$ASTHDX, ref = "1 YES")
+new_df$SDENICPROD <- relevel(new_df$SDENICPROD, ref = "2 NO")
+new_df$SEX <- relevel(new_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(ASTHDX ~ SDENICPROD * SEX, data = new_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+new_df <- small_df %>% select(ADGENH42, SDENICPROD, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+new_df <- new_df %>%  filter(age_group == "18-24")
+
+new_df$ADGENH42 <- relevel(new_df$ADGENH42, ref = "5 POOR")
+new_df$SDENICPROD <- relevel(new_df$SDENICPROD, ref = "2 NO")
+new_df$SEX <- relevel(new_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(ADGENH42 ~ SDENICPROD * SEX, data = new_df, family = "binomial")
+
+summary(fit)
+
+unique(small_df$ADGENH42)
 ```
 
