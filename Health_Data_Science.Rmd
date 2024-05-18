@@ -536,6 +536,106 @@ create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non
 
 ```
 
+```{r}
+calculate_and_plot <- function(data, age_column, smoking_column, health_disease_variables, condition_labels) {
+  data_filtered <- data %>% filter(!!sym(age_column) >= 18)
+  total_count <- nrow(data_filtered)
+  result_df <- data.frame(Condition = character(), n_smokers_with_condition = integer(), perc_smokers = numeric(), stringsAsFactors = FALSE)
+
+  for (condition in health_disease_variables) {
+    summary_df <- data_filtered %>%
+      summarise(
+        n_smokers_with_condition = sum(!!sym(smoking_column) == "1 YES" & !!sym(condition) == "1 YES", na.rm = TRUE),
+        total_with_condition = sum(!!sym(condition) == "1 YES", na.rm = TRUE)
+      ) %>%
+      mutate(
+        perc_smokers = 100 * n_smokers_with_condition / total_count,
+        Condition = condition
+      )
+    result_df <- rbind(result_df, summary_df)
+  }
+  
+  result_df$Condition <- factor(result_df$Condition, levels = health_disease_variables, labels = condition_labels)
+  
+  ggplot(result_df, aes(x = Condition, y = perc_smokers, fill = Condition)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Percentage of Persons 18 or Older \nWho Report Specific Health Diseases and Continue to Smoke",
+      x = "Heath Diseases",
+      y = "Percentage"
+    ) +
+    theme_classic() +
+    theme(legend.position = "none")
+}
+
+health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "STRKDX")
+
+condition_labels <- c(
+  "Asthma Diagnosis",
+  "Arthritis Diagnosis",
+  "Lung Cancer Diagnosis",
+  "Cholesterol Diagnosis",
+  "Chronic Bronchitis Diagnosis",
+  "Diabetes Diagnosis",
+  "Emphysema Diagnosis",
+  "High Blood Pressure Diagnosis",
+  "Stroke Diagnosis"
+)
+
+calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
+```
+
+```{r}
+calculate_and_plot <- function(data, age_column, smoking_column, health_disease_variables, condition_labels) {
+  data_filtered <- data %>% filter(!!sym(age_column) >= 18)
+  total_count <- nrow(data_filtered)
+  result_df <- data.frame(Condition = character(), n_smokers_with_condition = integer(), perc_smokers = numeric(), stringsAsFactors = FALSE)
+
+  for (condition in health_disease_variables) {
+    summary_df <- data_filtered %>%
+      summarise(
+        n_smokers_with_condition = sum(!!sym(smoking_column) == "2 NO" & !!sym(condition) == "1 YES", na.rm = TRUE),
+        total_with_condition = sum(!!sym(condition) == "1 YES", na.rm = TRUE)
+      ) %>%
+      mutate(
+        perc_smokers = 100 * n_smokers_with_condition / total_count,
+        Condition = condition
+      )
+    result_df <- rbind(result_df, summary_df)
+  }
+  
+  result_df$Condition <- factor(result_df$Condition, levels = health_disease_variables, labels = condition_labels)
+  
+  ggplot(result_df, aes(x = Condition, y = perc_smokers, fill = Condition)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Percentage of Persons 18 or Older \nWho Report Specific Health Diseases and Continue Do not Smoke",
+      x = "Health Desiases",
+      y = "Percentage"
+    ) +
+    theme_classic() +
+    theme(legend.position = "none")
+}
+
+health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "STRKDX")
+
+condition_labels <- c(
+  "Asthma Diagnosis",
+  "Arthritis Diagnosis",
+  "Lung Cancer Diagnosis",
+  "Cholesterol Diagnosis",
+  "Chronic Bronchitis Diagnosis",
+  "Diabetes Diagnosis",
+  "Emphysema Diagnosis",
+  "High Blood Pressure Diagnosis",
+  "Stroke Diagnosis"
+)
+
+calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
+```
+
 ## Contingency Tables
 
 ```{r, include= FALSE}
