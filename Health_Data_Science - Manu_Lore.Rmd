@@ -483,12 +483,26 @@ for (i in seq_along(contingency_tables)) {
 ```
 
 
-Things to do: 
-- 1 Introduction
-- 2 Exploratory analysis: go deep into the dataset analyzing the most important
-    variables.
-- 3 Effect of smoking/nicotine on physical health: understand how much is dangerous 
-    the abuse of smoke for the Pysichal healt
-- 4 Effect of smoking/nicotine on mental health:understand how much is dangerous 
-    the abuse of smoke for the mental healt
-- 5 Conclusion
+# New part
+
+Trying to asses what are the best variables to fit a logistic model with AIC forward selection
+
+Creating a function to reapet the test for diffrent variables, with somke yes not as the dependent:
+```{r}
+forward_AIC = function(df, vars, dep_var){
+  selected_df = df %>% select(all_of(c(vars, dep_var)))
+  
+  fit_null = glm(as.formula(paste(dep_var, "~ 1")), data = selected_df, family = "binomial")
+  fit_full = glm(as.formula(paste(dep_var, "~ .")), data = selected_df, family = "binomial")
+  
+  step(fit_null, scope=list(lower=fit_null, upper=fit_full), direction="forward",trace=0, k=2)
+}
+```
+
+Trying to asses best demografic variables:
+```{r}
+new_dem_var = c("TTLP21X", "FAMINC21", "age_group", "REGION21", "sex_group", "RACEV2X", "MARRY21X", "FTSTU21X", "EMPST31")
+
+forward_AIC(small_df, new_dem_var, "ADSMOK42")
+```
+
