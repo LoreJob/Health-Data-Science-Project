@@ -78,6 +78,8 @@ Our main explanatory variables:
 
 ADSMOK42: currently smokes
 
+OFTSMK53: How Oftn Smoke Cigarettes (>17) - RD 5/3
+
 ADNSMK42 - If ADSMOK42 = 1, doctor advised you to quit smoking
 
 SDENICPROD: used electronic nicotine product
@@ -183,7 +185,7 @@ RACEV2X:race
 #The Social Determinants of Health Survey (SDOH) includes questions about the social determinants of health, such as housing, financial well-being, food security, social support, discrimination, and physical and sexual violence.: SDLIFE, SDHOME, SDMEDCARE, SDHLTHFOOD, SDCOMPAN, SDLEFTOUT, SDISOL, SDHMDEPR, SDHMALC, SDHMDRG, SDHMDIV, SDHMBEAT, SDHURTCHLD
 
 ```{r}
-vars_to_keep = c("ADSMOK42","SDENICPROD","ADDPRS42","ADGENH42",
+vars_to_keep = c("ADSMOK42", "OFTSMK53","SDENICPROD","ADDPRS42","ADGENH42",
                  "ADENGY42","ADHOPE42","ADNERV42","ADPCFL42","ADSAD42",
                  "AGELAST","ASTHDX","CALUNG","CHOLDX","DIABDX_M18","EMPHDX",
                  "FAMINC21","HIBPDX","MNHLTH31","RTHLTH31","TTLP21X",
@@ -848,4 +850,46 @@ summary(fit)
 
 unique(small_df$ADGENH42)
 ```
+
+
+
+
+## Trying with how often do you smoke
+
+### Lung Cancer 
+
+```{r}
+values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPPLICABLE")
+
+filter_df <-small_df %>% select(CALUNG, OFTSMK53, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "1 YES")
+filter_df$OFTSMK53 <- relevel(filter_df$OFTSMK53, ref = "3 NOT AT ALL")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(CALUNG ~ OFTSMK53 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+
+```
+
+### Chronic Bronchitis
+```{r}
+filter_df <-small_df %>% select(CHBRON31, OFTSMK53, SEX, age_group) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(age_group == "65+")
+
+filter_df$CHBRON31 <- relevel(filter_df$CHBRON31, ref = "1 YES")
+filter_df$OFTSMK53 <- relevel(filter_df$OFTSMK53, ref = "3 NOT AT ALL")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
+
+fit <- glm(CHBRON31 ~ OFTSMK53 * SEX * age_group, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
 
