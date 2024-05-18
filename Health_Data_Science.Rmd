@@ -702,6 +702,111 @@ ggplot(chisq_df_diseases, aes(x = name, y = value)) +
 
 ```
 
+### now we do the contingency tables for mental health variables instead of physical health
+
+the main issue is that all those variables are multicategorical and not yes or no
+
+```{r}
+#writing functions to make contingency tables for multiple categories
+
+table_mental_health = function(data, explanatory_var, var_of_interest, cond_prob = T){
+  tbl = data %>%
+    select(explanatory_var, var_of_interest)%>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           !.data[[var_of_interest]] %in% c("-15 CANNOT BE COMPUTED",
+                                            "-1 INAPPLICABLE",
+                                            "-8 DK","-7 REFUSED"))%>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  if (cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+  }
+  tbl
+}
+
+#this one takes two variables and an age group, allowing to check separately
+#different ages
+table_mental_health_age = function(data, explanatory_var, var_of_interest,
+                           age_bracket, cond_prob = T){
+  tbl = data %>% filter(age_group == age_bracket) %>%
+    select(explanatory_var,var_of_interest) %>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           !.data[[var_of_interest]] %in% c("-15 CANNOT BE COMPUTED",
+                                            "-1 INAPPLICABLE",
+                                            "-8 DK","-7 REFUSED"))%>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  
+  if(cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+    }
+  tbl
+}
+
+#plotting all the mental health variables
+
+# "MNHLTH31"
+table_mental_health(small_df, "ADSMOK42", "MNHLTH31") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = MNHLTH31)) +
+  labs(title = "Contingency table: Perceived Mental Health status", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+
+#"ADPCFL42"
+table_mental_health(small_df, "ADSMOK42", "ADPCFL42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADPCFL42)) +
+  labs(subtitle = "During the past 4 weeks, how often people felt calm and peaceful",
+       title = "Contingency table: Smoking and feeling peaceful", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+
+#"ADDPRS42"
+table_mental_health(small_df, "ADSMOK42", "ADDPRS42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADDPRS42)) +
+  labs(subtitle = "How many days in the past 2 weeks people felt down/depressed/hopeless",
+       title = "Contingency table: Smoking and feeling down", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+# "ADHOPE42"
+table_mental_health(small_df, "ADSMOK42", "ADHOPE42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADHOPE42)) +
+  labs(subtitle = "During the past 30 days, how often people felt hopeless",
+       title = "Contingency table: Smoking and feeling hopeless", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+# "ADNERV42"
+table_mental_health(small_df, "ADSMOK42", "ADNERV42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADNERV42)) +
+  labs(subtitle = "During the past 30 days, how often people felt nervous",
+       title = "Contingency table: Smoking and feeling nervous", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+# "ADSAD42" 
+table_mental_health(small_df, "ADSMOK42", "ADSAD42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADSAD42)) +
+  labs(subtitle = "During the past 30 days, how often people felt so sad that nothing could cheer the person up",
+       title = "Contingency table: Smoking and feeling sad", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+
+
+
+```
+
+
+
 
 Things to do: 
 - 1 Introduction
