@@ -636,7 +636,7 @@ condition_labels <- c(
 calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
 ```
 
-## Contingency Tables
+## Contingency Tables with smoking
 
 ```{r, include= FALSE}
 # defining functions to create contingency tables and chisquared tests
@@ -809,7 +809,7 @@ the main issue is that all those variables are multicategorical and not yes or n
 ```{r}
 #writing functions to make contingency tables for multiple categories
 
-table_mental_health = function(data, explanatory_var, var_of_interest, cond_prob = T){
+table_multi_cat = function(data, explanatory_var, var_of_interest, cond_prob = T){
   tbl = data %>%
     select(explanatory_var, var_of_interest)%>%
     filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
@@ -826,7 +826,7 @@ table_mental_health = function(data, explanatory_var, var_of_interest, cond_prob
 
 #this one takes two variables and an age group, allowing to check separately
 #different ages
-table_mental_health_age = function(data, explanatory_var, var_of_interest,
+table_multi_cat_age = function(data, explanatory_var, var_of_interest,
                            age_bracket, cond_prob = T){
   tbl = data %>% filter(age_group == age_bracket) %>%
     select(explanatory_var,var_of_interest) %>%
@@ -846,7 +846,7 @@ table_mental_health_age = function(data, explanatory_var, var_of_interest,
 #plotting all the mental health variables
 
 # "MNHLTH31"
-table_mental_health(small_df, "ADSMOK42", "MNHLTH31") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "MNHLTH31") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = MNHLTH31)) +
   labs(title = "Contingency table: Perceived Mental Health status", x = "",
        y="frequency", fill="") +
@@ -855,7 +855,7 @@ table_mental_health(small_df, "ADSMOK42", "MNHLTH31") %>% as_tibble() %>%
 
 
 #"ADPCFL42"
-table_mental_health(small_df, "ADSMOK42", "ADPCFL42") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "ADPCFL42") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADPCFL42)) +
   labs(subtitle = "During the past 4 weeks, how often people felt calm and peaceful",
        title = "Contingency table: Smoking and feeling peaceful", x = "",
@@ -865,7 +865,7 @@ table_mental_health(small_df, "ADSMOK42", "ADPCFL42") %>% as_tibble() %>%
 
 
 #"ADDPRS42"
-table_mental_health(small_df, "ADSMOK42", "ADDPRS42") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "ADDPRS42") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADDPRS42)) +
   labs(subtitle = "How many days in the past 2 weeks people felt down/depressed/hopeless",
        title = "Contingency table: Smoking and feeling down", x = "",
@@ -874,7 +874,7 @@ table_mental_health(small_df, "ADSMOK42", "ADDPRS42") %>% as_tibble() %>%
                               "2 NO" = "Non Smokers"))
 
 # "ADHOPE42"
-table_mental_health(small_df, "ADSMOK42", "ADHOPE42") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "ADHOPE42") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADHOPE42)) +
   labs(subtitle = "During the past 30 days, how often people felt hopeless",
        title = "Contingency table: Smoking and feeling hopeless", x = "",
@@ -883,7 +883,7 @@ table_mental_health(small_df, "ADSMOK42", "ADHOPE42") %>% as_tibble() %>%
                               "2 NO" = "Non Smokers"))
 
 # "ADNERV42"
-table_mental_health(small_df, "ADSMOK42", "ADNERV42") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "ADNERV42") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADNERV42)) +
   labs(subtitle = "During the past 30 days, how often people felt nervous",
        title = "Contingency table: Smoking and feeling nervous", x = "",
@@ -892,7 +892,7 @@ table_mental_health(small_df, "ADSMOK42", "ADNERV42") %>% as_tibble() %>%
                               "2 NO" = "Non Smokers"))
 
 # "ADSAD42" 
-table_mental_health(small_df, "ADSMOK42", "ADSAD42") %>% as_tibble() %>%
+table_multi_cat(small_df, "ADSMOK42", "ADSAD42") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADSAD42)) +
   labs(subtitle = "During the past 30 days, how often people felt so sad that nothing could cheer the person up",
        title = "Contingency table: Smoking and feeling sad", x = "",
@@ -905,8 +905,234 @@ table_mental_health(small_df, "ADSMOK42", "ADSAD42") %>% as_tibble() %>%
 
 ```
 
+### Contingency tables for general health and smoking
+```{r}
+# variables about general health
+# "" "" "" "WLKLIM53"
+
+#ADGENH42
+table_multi_cat(small_df, "ADSMOK42", "ADGENH42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADGENH42)) +
+  labs(title = "Contingency table: Smoking and General health", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+#RTHLTH31
+table_multi_cat(small_df, "ADSMOK42", "RTHLTH31") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = RTHLTH31)) +
+  labs(title = "Contingency table: Smoking and Perceived Health Status", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+#ADENGY42
+table_multi_cat(small_df, "ADSMOK42", "ADENGY42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = ADENGY42)) +
+  labs(subtitle = "During the past 4 weeks, how many people had a lot of energy",
+       title = "Contingency table: Smoking and energy", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+#WLKLIM53
+
+table_multi_cat(small_df, "ADSMOK42", "WLKLIM53") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = ADSMOK42, y = n, fill = WLKLIM53)) +
+  labs(title = "Contingency table: Smoking and Limitation in Physical Functioning", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))
+
+```
 
 
+## Contingency tables for electronic nicotine product
+
+
+```{r}
+# diseases association with electronic nicotine product
+for(variable in health_disease_variables){
+  if("1 YES" %in% levels(small_df[[variable]])){
+  print(titles_health_disease[variable])
+  print("Contingency table")
+  print(cont_tables(small_df, "SDENICPROD", variable)%>% round(digits=3))
+  print("testing hypothesis of no association")
+  print(cont_tables(small_df, "SDENICPROD", variable,F)%>% chisq.test(correct = F))
+  print("------------")
+  }
+
+}
+```
+Association between usage of Electronic Nicotine product and diseases: analysis with conditional contingency tables and chi squared tests
+Summary of key points:
+
+- Asthma: strong association: who uses e cigs is more likely to have asthma
+
+-Arthritis: strong association but in the opposite direction: who uses e-cigs has a lower rate of Arthritis. Probably because of confounding effect of age. Young people are less likely to have Arthritis, but are much more likely to use e cigs
+
+-Lung Cancer: strong association, correct direction
+
+-Cholesterol: strong association, but in opposite direction: need to control for age like arthritis
+
+-Chronic Bronchitis: strong association, correct direction
+
+-Diabetes: strong association, correct direction
+
+-Emphysema: strong association, correct direction
+
+-High Blood Pressure: strong association, but in opposite direction: need to control for age like arthritis
+
+-Stroke: strong association, correct direction
+
+```{r}
+
+chisq_df_diseases = data.frame(diseases = health_disease_variables,
+                               p_val_full_data= rep(NA, length(health_disease_variables)),
+                               p_val_65plus_data= rep(NA, length(health_disease_variables)),
+                               p_val_45_64_data= rep(NA, length(health_disease_variables)))
+
+for(i in 1:nrow(chisq_df_diseases)){
+  variable = chisq_df_diseases[i,"diseases"]
+  test_full = cont_tables(small_df,"SDENICPROD",variable, F) %>%
+    chisq.test(correct = F)
+  test_45_64 = cont_tables_age(small_df,"SDENICPROD",variable,"45-64",F) %>%
+    chisq.test(correct = F)
+  test_65plus = cont_tables_age(small_df,"SDENICPROD",variable,"65+",F) %>%
+    chisq.test(correct = F)
+  chisq_df_diseases[i,"p_val_full_data"] = test_full$p.val
+  chisq_df_diseases[i,"p_val_45_64_data"] = test_45_64$p.val
+  chisq_df_diseases[i,"p_val_65plus_data"] = test_65plus$p.val
+  
+}
+
+chisq_df_diseases = chisq_df_diseases %>%
+  rename(full_data = p_val_full_data,
+         age_65plus = p_val_65plus_data,
+         age_45_64 = p_val_45_64_data) %>%
+  mutate(diseases = titles_health_disease[diseases]) %>%
+  pivot_longer(cols=c("full_data","age_65plus","age_45_64"))
+
+ggplot(chisq_df_diseases, aes(x = name, y = value)) +
+  geom_col() + geom_hline(aes(yintercept = 0.05), col = "red") +
+  facet_wrap(~diseases, scales = "free") + 
+  labs(title="Testing hypothesis of no association between 
+Electronic Nicotine Product usage and various diseases",
+       subtitle = "P-value of Chi squared test, controlling for age groups",
+       x = "", y ="")+
+  scale_x_discrete(labels = c("full_data" = "All patients",
+                              "age_65plus" = "ages 45-64",
+                              "age_45_64" = "ages 65 plus")) +
+  theme_minimal() + theme(axis.text.x = element_text(size = 7))
+```
+
+
+### Electronic nicotine product usage and general health indicators
+
+
+```{r}
+
+
+#ADGENH42
+table_multi_cat(small_df, "SDENICPROD", "ADGENH42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADGENH42)) +
+  labs(title = "Contingency table: Electronic nicotine product usage and General health", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Users",
+                              "2 NO" = "Non users"))
+#RTHLTH31
+table_multi_cat(small_df, "SDENICPROD", "RTHLTH31") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = RTHLTH31)) +
+  labs(title = "Contingency table: Electronic nicotine product usage and Perceived Health Status", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "Users",
+                              "2 NO" = "Non Users"))
+
+#ADENGY42
+table_multi_cat(small_df, "SDENICPROD", "ADENGY42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADENGY42)) +
+  labs(subtitle = "During the past 4 weeks, how many people had a lot of energy",
+       title = "Contingency table: Electronic nicotine product usage and energy", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+#WLKLIM53
+
+table_multi_cat(small_df, "SDENICPROD", "WLKLIM53") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = WLKLIM53)) +
+  labs(title = "Contingency table: Electronic nicotine product usage and Limitation in Physical Functioning", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+```
+
+
+### Mental health and electronic nicotine product usage
+```{r}
+
+# "MNHLTH31"
+table_multi_cat(small_df, "SDENICPROD", "MNHLTH31") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = MNHLTH31)) +
+  labs(title = "electronic nicotine product usage and Perceived Mental Health status", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+
+#"ADPCFL42"
+table_multi_cat(small_df, "SDENICPROD", "ADPCFL42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADPCFL42)) +
+  labs(subtitle = "During the past 4 weeks, how often people felt calm and peaceful",
+       title = "electronic nicotine product usage and feeling peaceful", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+
+#"ADDPRS42"
+table_multi_cat(small_df, "SDENICPROD", "ADDPRS42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADDPRS42)) +
+  labs(subtitle = "How many days in the past 2 weeks people felt down/depressed/hopeless",
+       title = "Contingency table: electronic nicotine product usage and feeling down", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+# "ADHOPE42"
+table_multi_cat(small_df, "SDENICPROD", "ADHOPE42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADHOPE42)) +
+  labs(subtitle = "During the past 30 days, how often people felt hopeless",
+       title = "electronic nicotine product usage and feeling hopeless", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+# "ADNERV42"
+table_multi_cat(small_df, "SDENICPROD", "ADNERV42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADNERV42)) +
+  labs(subtitle = "During the past 30 days, how often people felt nervous",
+       title = "electronic nicotine product usage and feeling nervous", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+# "ADSAD42" 
+table_multi_cat(small_df, "SDENICPROD", "ADSAD42") %>% as_tibble() %>%
+  ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = ADSAD42)) +
+  labs(subtitle = "During the past 30 days, how often people felt so sad that nothing could cheer the person up",
+       title = "electronic nicotine product usage and feeling sad", x = "",
+       y="frequency", fill="") +
+  scale_x_discrete(labels = c("1 YES" = "users",
+                              "2 NO" = "Non users"))
+
+
+
+```
+
+Summary:
+
+the general health of e-nicotine products users is the not much lower than that of non users. However there is a bigger gap in the mental health of the two groups: in the data we see that non users tend to have higher values of good mental health
 
 Things to do: 
 - 1 Introduction
