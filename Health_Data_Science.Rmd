@@ -227,11 +227,10 @@ small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
   ggplot(aes(x = age_group)) +
   geom_col(aes(y = n_non_smokers, fill = "non smokers")) +
   geom_col(aes(y = n_smokers, fill = "smokers")) +
-  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = 130)) +
   labs(title = "Age distribution of smokers and non smokers",
        y = "count", x = "age group", fill = "") + theme_classic()
 
-# e-smokers 
 small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
   summarise(n_smokers = sum(SDENICPROD == "1 YES"),
             n_non_smokers = sum(SDENICPROD == "2 NO"),
@@ -239,11 +238,12 @@ small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
   mutate(perc_smokers = 100*n_smokers/n_non_smokers) %>% 
   slice(-1) %>%
   ggplot(aes(x = age_group)) +
-  geom_col(aes(y = n_non_smokers, fill = "non e-cigarets smokers")) +
-  geom_col(aes(y = n_smokers, fill = "e-cigarets smokers")) +
-  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = n_smokers)) +
-  labs(title = "Age distribution of e-sigarets smokers and non smokers",
+  geom_col(aes(y = n_non_smokers, fill = "non users")) +
+  geom_col(aes(y = n_smokers, fill = "users")) +
+  geom_text(aes(label=paste(round(perc_smokers,2),"%"), y = 130)) +
+  labs(title = "Age distribution of electronic nicotine product usage",
        y = "count", x = "age group", fill = "") + theme_classic()
+
 
 ```
 #Working on the demograpthical characteristics 
@@ -478,6 +478,7 @@ create_plots_general_health(e_smokers_df, general_health_variables, titles_e_smo
 * General health perception of smokers and non-smokers quite similar (good or very-good mostly).Same for energy level and overall health, 38% of them don't have a walking limitations.
 
 *Little another picture for e-smokers.Their energy level some times lower and distribution on overall health rate is higher tan for smokers and non-smokers. 45% don't have a walking limitations
+
 
 ```{r, eval=TRUE}
 #deseases
