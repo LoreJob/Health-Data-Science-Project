@@ -275,7 +275,7 @@ non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
 
 
 
-```{r}
+```{r, eval=FALSE}
 #demographic characteristics
 create_plots_demogr <- function(data, demographic_variables, titles) {
   data <- data %>%
@@ -335,7 +335,7 @@ create_plots_demogr(smokers_df, demographic_variables, titles_smokers)
 create_plots_demogr(non_smokers_df, demographic_variables, titles_non_smokers)
 
 ```
-```{r}
+```{r, eval = FALSE}
 #mental health
 create_plots_mental_health <- function(data, mental_health_variables, titles) {
   data <- data %>%
@@ -380,7 +380,7 @@ create_plots_mental_health(non_smokers_df, mental_health_variables, titles_non_s
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 create_plots_general_health <- function(data, general_health_variables, titles) {
   data <- data %>%
     filter(!is.na(sex_group))
@@ -503,12 +503,7 @@ forward_AIC = function(df, vars, dep_var){
 }
 ```
 
-Trying to asses best demografic variables:
-```{r}
-new_dem_var = c("TTLP21X", "FAMINC21", "age_group", "REGION21", "sex_group", "RACEV2X", "MARRY21X", "FTSTU21X", "EMPST31")
 
-forward_AIC(small_df, new_dem_var, "ADSMOK42")
-```
 
 
 
@@ -521,9 +516,14 @@ values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPP
 
 filter_df <-small_df %>% select(CALUNG, ADSMOK42, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
+filter_df = filter_df %>% mutate(age_group = cut(AGELAST,
+                                    breaks = c(-Inf,18, 25, 30, 35, 40, 45, 50, 55, 60, 65, Inf),
+                  labels = c("0-18","18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54","55-59", "60-64", "65+"),
+                  right = FALSE))
+
 # filter_df <- filter_df %>% filter(age_group == "65+")
 
-filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "1 YES")
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "2 NO")
 filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
 filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 # filter_df$age_group <- relevel(filter_df$age_group, ref = "65+")
@@ -534,16 +534,45 @@ summary(fit)
 ```
 
 
-```{r}
-library(jtools)
 
-summ(fit, model.info = F)
+```{r}
+data_point <- filter_df %>%  group_by(age_group,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(CALUNG == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot) 
+
+data_point 
+
+
+# Fitting the model
+fit2 <- glm(CALUNG ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit2, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+
 ```
 
 
 
 ### Asthma 
+
+
+
 ```{r}
+
+
 filter_df <-small_df %>% select(ASTHDX, ADSMOK42, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
 # filter_df <- filter_df %>% filter(age_group == "65+")
@@ -557,6 +586,8 @@ fit <- glm(ASTHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomi
 
 summary(fit)
 
+
+library(jtools)
 summ(fit, model.info = F)
 ```
 
