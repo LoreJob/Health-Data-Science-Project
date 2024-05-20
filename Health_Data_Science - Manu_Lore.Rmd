@@ -423,7 +423,7 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   geom_line() +
   geom_point(data = data_point, aes(y = frequency)) + 
   facet_wrap(~SEX) +
-  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+  labs(title = "Predicted Probability of HIBPDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()
@@ -535,7 +535,7 @@ legend("topright",
 
 
 
-### General Health Smoking
+## General Health Smoking
 ```{r}
 filter_df <-small_df %>% select(ADGENH42, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -681,7 +681,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   geom_line() +
   geom_point(data = data_point, aes(y = frequency)) + 
   facet_wrap(~SEX) +
-  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+  labs(title = "Predicted Probability of STRKDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()
@@ -763,7 +763,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   geom_line() +
   geom_point(data = data_point, aes(y = frequency)) + 
   facet_wrap(~SEX) +
-  labs(title = "Predicted Probability of ASTHDX by Age, Smoking Status, and Sex",
+  labs(title = "Predicted Probability of ARTHDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()
@@ -842,7 +842,7 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   geom_line() +
   geom_point(data = data_point, aes(y = frequency)) + 
   facet_wrap(~SEX) +
-  labs(title = "Predicted Probability of CHBRON31 by Age, Smoking Status, and Sex",
+  labs(title = "Predicted Probability of DIABDX_M18 by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()
@@ -882,7 +882,7 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   geom_line() +
   geom_point(data = data_point, aes(y = frequency)) + 
   facet_wrap(~SEX) +
-  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+  labs(title = "Predicted Probability of HIBPDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()
@@ -993,7 +993,7 @@ legend("topright",
 
 
 
-### General Health E-Smoking
+## General Health E-Smoking
 ```{r}
 filter_df <-small_df %>% select(ADGENH42, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -1092,7 +1092,7 @@ legend("topright",
        col = c(1,2,3,4,5), lty = 1)
 ```
 
-### Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
+## Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
 
 ```{r}
 new_df <- small_df %>% select(ASTHDX, SDENICPROD, SEX, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
