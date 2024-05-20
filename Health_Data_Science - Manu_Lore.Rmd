@@ -257,13 +257,10 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
-  theme_minimal()
+  theme_minimal()+
+  ylim(c(0, 0.35))
 
 ```
-
-
-
-### Asthma 
 
 
 
@@ -304,7 +301,8 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   labs(title = "Predicted Probability of ASTHDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -386,7 +384,8 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   labs(title = "Predicted Probability of CHBRON31 by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -426,7 +425,48 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   labs(title = "Predicted Probability of HIBPDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+#### Trying to see if Colesterol and Blood pressure are correlated
+
+```{r}
+filter_df <- small_df %>% select(CHOLDX, HIBPDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$HIBPDX <- relevel(filter_df$HIBPDX, ref = "2 NO")
+filter_df$CHOLDX <- relevel(filter_df$CHOLDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHOLDX ~ HIBPDX * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+
+summ(fit, model.info = F)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, HIBPDX) %>% summarise(WithChol = sum(CHOLDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithChol/tot) 
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), HIBPDX = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = HIBPDX)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of High Cholesterol by Age, High Blood Pressure, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -445,7 +485,7 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 
 fit <- vglm(MNHLTH31 ~ AGELAST , data = filter_df, family = multinomial)
 
-# summary(fit)
+summary(fit)
 
 df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
 
