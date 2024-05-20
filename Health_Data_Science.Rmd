@@ -612,7 +612,7 @@ calculate_and_plot <- function(data, age_column, smoking_column, health_disease_
     geom_col() +
     coord_flip() +
     labs(
-      title = "Percentage of Persons 18 or Older \nWho Report Specific Health Diseases and Continue Do not Smoke",
+      title = "Percentage of non-smokers 18 or Older \nWho Report Specific Health Diseases",
       x = "Health Desiases",
       y = "Percentage"
     ) +
@@ -636,6 +636,81 @@ condition_labels <- c(
 
 calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
 ```
+
+```{r}
+
+condition_labels <- c(
+  "Asthma Diagnosis",
+  "Arthritis Diagnosis",
+  "Lung Cancer Diagnosis",
+  "Cholesterol Diagnosis",
+  "Chronic Bronchitis Diagnosis",
+  "Diabetes Diagnosis",
+  "Emphysema Diagnosis",
+  "High Blood Pressure Diagnosis",
+  "Stroke Diagnosis"
+)
+
+diseases_percentages = small_df %>% filter(AGELAST >= 18) %>%
+  select(ADSMOK42, all_of(health_disease_variables)) %>% group_by(ADSMOK42) %>%
+  summarise(ASTHDX = sum(ASTHDX == "1 YES")/sum(ASTHDX %in% c("1 YES","2 NO")),
+            ARTHDX = sum(ARTHDX == "1 YES")/sum(ARTHDX %in% c("1 YES","2 NO")),
+            CALUNG = sum(CALUNG == "1 YES")/sum(CALUNG %in% c("1 YES","2 NO")),
+            CHOLDX = sum(CHOLDX == "1 YES")/sum(CHOLDX %in% c("1 YES","2 NO")),
+            CHBRON31 = sum(CHBRON31 == "1 YES")/sum(CHBRON31 %in% c("1 YES","2 NO")),
+            DIABDX_M18 = sum(DIABDX_M18 == "1 YES")/sum(DIABDX_M18 %in% c("1 YES","2 NO")),
+            EMPHDX = sum(EMPHDX == "1 YES")/sum(EMPHDX %in% c("1 YES","2 NO")),
+            HIBPDX = sum(HIBPDX == "1 YES")/sum(HIBPDX %in% c("1 YES","2 NO")),
+            STRKDX = sum(STRKDX == "1 YES")/sum(STRKDX %in% c("1 YES","2 NO"))) %>%
+  pivot_longer(cols = health_disease_variables) %>%
+  rename(percentage = value , condition = name) %>%
+  mutate(condition = factor(condition,
+                            levels = health_disease_variables,
+                            labels = condition_labels))
+
+
+
+diseases_percentages %>% filter(ADSMOK42 != "-1 INAPPLICABLE") %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = condition)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Percentage of people 18 or Older Who Report Specific Health Diseases",
+      x = "",
+      y = "Percentage"
+    ) +
+  facet_wrap(~ADSMOK42,
+             labeller = labeller(category = c("1 YES" = "Smokers", "2 NO" = "non-Smokers")))+
+    theme_classic() +
+    theme(legend.position = "none")
+
+
+diseases_percentages %>% filter(ADSMOK42 == "1 YES") %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = condition)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Percentage of Smokers 18 or Older \nWho Report Specific Health Diseases",
+      x = "",
+      y = "Percentage"
+    ) +
+    theme_classic() +
+    theme(legend.position = "none")
+
+diseases_percentages %>% filter(ADSMOK42 == "2 NO") %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = condition)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Percentage of non-Smokers 18 or Older \nWho Report Specific Health Diseases",
+      x = "",
+      y = "Percentage"
+    ) +
+    theme_classic() +
+    theme(legend.position = "none")
+
+```
+
 
 ## Contingency Tables with smoking
 
@@ -777,15 +852,11 @@ for(i in 1:nrow(chisq_df_diseases)){
   chisq_df_diseases[i,"p_val_full_data"] = test_full$p.val
   chisq_df_diseases[i,"p_val_45_64_data"] = test_45_64$p.val
   chisq_df_diseases[i,"p_val_65plus_data"] = test_65plus$p.val
-  
 }
 
 chisq_df_diseases = chisq_df_diseases %>%
-  rename(full_data = p_val_full_data,
-         age_65plus = p_val_65plus_data,
-         age_45_64 = p_val_45_64_data) %>%
   mutate(diseases = titles_health_disease[diseases]) %>%
-  pivot_longer(cols=c("full_data","age_65plus","age_45_64"))
+  pivot_longer(cols=c("p_val_full_data","p_val_65plus_data","p_val_45_64_data"))
 
 ggplot(chisq_df_diseases, aes(x = name, y = value)) +
   geom_col() + geom_hline(aes(yintercept = 0.05), col = "red") +
@@ -793,9 +864,9 @@ ggplot(chisq_df_diseases, aes(x = name, y = value)) +
   labs(title="Testing hypothesis of no association between Smoking and various diseases",
        subtitle = "P-value of Chi squared test, controlling for age groups",
        x = "", y ="")+
-  scale_x_discrete(labels = c("full_data" = "All patients",
-                              "age_65plus" = "ages 45-64",
-                              "age_45_64" = "ages 65 plus")) +
+  scale_x_discrete(labels = c("p_val_full_data" = "All patients",
+                              "p_val_65plus_data" = "ages 45-64",
+                              "p_val_45_64_data" = "ages 65 plus")) +
   theme_minimal() + theme(axis.text.x = element_text(size = 7))
   
 
