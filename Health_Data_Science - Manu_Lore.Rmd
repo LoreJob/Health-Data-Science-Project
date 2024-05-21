@@ -538,8 +538,16 @@ fit2 <-  vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
 pchisq(deviance(null)-deviance(fit2),
 df = df.residual(null)-df.residual(fit2), lower.tail=FALSE)
 
+summary(fit2)
+```
 
+<<<<<<< HEAD
 df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO", SEX = "1 MALE")
+=======
+
+```{r}
+df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO", SEX = "2 FEMALE")
+>>>>>>> 651c958df8e6ad1a19306cceb76286b2b935710c
 preds = predict(fit2, df_pred) # check that they sum to 1
 cum_probabilities = t(apply(preds,1,plogis))
 
