@@ -475,7 +475,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = HIBPDX)) +
 ### Perceived Mental Health Status 
 
 ```{r}
-filter_df <-small_df %>% select(MNHLTH31, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+filter_df <-small_df %>% select(MNHLTH31, ADSMOK42, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
 # filter_df <- filter_df %>% filter(AGEGROUP == "65+")
 
@@ -484,42 +484,20 @@ filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
 filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 ```
 
-```{r}
-filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31) 
 
-# parallel = TRUE imposes proportional odds structure
-# 2 intercepts for 3 y categories 
-fit <-  vglm(MNHLTH31 ~ AGELAST + ADSMOK42,
+```{r}
+fit <- vglm(MNHLTH31 ~ AGELAST,
              family = cumulative(parallel = TRUE),
              data = filter_df)
 
-summary(fit)  # same effects for all 3 logits
-```
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
 
-```{r}
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 500), ADSMOK42 = "2 NO")
-preds = predict(fit, df_pred) 
 
-cum_probabilities = t(apply(preds,1,plogis))
-
-par(mfrow = c(1,2))
-matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
+matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
+  title("Mental Health by Age") + 
   grid()
-legend("left", 
-       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
-
-category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
-preds = predict(fit, df_pred, type = "response") # check that they are equivalent
-
-
-matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
-legend("right",
-       legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+legend("left",legend = unique(filter_df$MNHLTH31), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
 
 ```{r}
@@ -528,48 +506,6 @@ null <-  vglm(MNHLTH31 ~ 1,
              data = filter_df)
 
 pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
-```
-
-```{r}
-fit2 <-  vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-
-pchisq(deviance(null)-deviance(fit2),
-df = df.residual(null)-df.residual(fit2), lower.tail=FALSE)
-
-summary(fit2)
-```
-
-<<<<<<< HEAD
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO", SEX = "1 MALE")
-=======
-
-```{r}
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO", SEX = "2 FEMALE")
->>>>>>> 651c958df8e6ad1a19306cceb76286b2b935710c
-preds = predict(fit2, df_pred) # check that they sum to 1
-cum_probabilities = t(apply(preds,1,plogis))
-
-par(mfrow = c(1,2))
-matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
-  grid()
-legend("bottomleft", 
-       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.12))
-category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
-preds = predict(fit2, df_pred, type = "response") # check that they are equivalent
-matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
-legend("topright",
-       legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.32))
-
-par(mar = c(5, 4, 4, 8) + 0.1)
 ```
 
 #### Difference between smokers and non smokers
@@ -582,12 +518,12 @@ n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
 
 ```{r}
 # For smokers
-fit <- vglm(MNHLTH31 ~ SEX + AGELAST,
+fit <- vglm(MNHLTH31 ~ AGELAST,
              family = cumulative(parallel = TRUE),
              data = smk_df)
 
-df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), l = 50), SEX = "2 FEMALE")
-preds = predict(fit, df_pred) # check that they sum to 1
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
 cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
@@ -613,11 +549,11 @@ mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, lin
 
 ```{r}
 # For non smokers
-fit <- vglm(MNHLTH31 ~ SEX + AGELAST,
+fit <- vglm(MNHLTH31 ~ AGELAST,
              family = cumulative(parallel = TRUE),
              data = n_smk_df)
 
-df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), l = 50), SEX = "2 FEMALE")
+df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), by = 1))
 preds = predict(fit, df_pred) # check that they sum to 1
 cum_probabilities = t(apply(preds,1,plogis))
 
@@ -662,6 +598,7 @@ df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 N
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
+  title("General Health by Age") + 
   grid()
 legend("left",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
@@ -677,29 +614,28 @@ anova(fit, test="LRT")
 ```
 
 ```{r}
-filter_df$MNHLTH31 = ordered(filter_df$ADGENH42) 
-
-# parallel = TRUE imposes proportional odds structure
-# 2 intercepts for 3 y categories 
-fit <-  vglm(MNHLTH31 ~ AGELAST + ADSMOK42,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-
-summary(fit)  # same effects for all 3 logits
+smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
+n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
 ```
 
 ```{r}
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO")
-preds = predict(fit, df_pred) # check that they sum to 1
+# For smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
 cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
   grid()
-legend("left", 
+legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
@@ -707,47 +643,40 @@ matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 ```{r}
-null <-  vglm(MNHLTH31 ~ 1,
+# For not smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
              family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(null)-deviance(fit),
-df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
-```
+             data = n_smk_df)
 
-```{r}
-fit2 <-  vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(fit)-deviance(fit2),
-df=df.residual(fit)-df.residual(fit2), lower.tail=FALSE)
-
-
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), SDENICPROD = "2 NO", SEX = "2 FEMALE", ADSMOK42 = "2 NO")
-preds = predict(fit2, df_pred) # check that they sum to 1
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
 cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
   grid()
-legend("left", 
+legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
-preds = predict(fit2, df_pred, type = "response") # check that they are equivalent
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
         ylab = "Category probabilites", xlab = "AGELAST") +
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for NOT Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
-
-
 
 
 
@@ -1002,56 +931,91 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
 ```
 
 
+
+
 ## Multilogit regression for Mental Health
 
 ### Perceived Mental Health Status 
 
 ```{r}
-filter_df <-small_df %>% select(MNHLTH31, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+filter_df <-small_df %>% select(MNHLTH31, SDENICPROD, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
 # filter_df <- filter_df %>% filter(AGEGROUP == "65+")
 
 filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "1 EXCELLENT")
 filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
 filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+```
 
-fit <- vglm(MNHLTH31 ~ AGELAST , data = filter_df, family = multinomial)
 
-# summary(fit)
-
+```{r}
 df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
 
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
+  title("Mental Health by Age") + 
   grid()
 legend("left",legend = unique(filter_df$MNHLTH31), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
 
 ```{r}
-confint(fit)
-
-null = vglm(MNHLTH31 ~ 1, family = multinomial, data  = filter_df)
-
-print(pseudo_R2 <- 1 - deviance(fit) / deviance(null))
-
-anova(fit, test="LRT")
-```
-
-```{r}
-filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31) 
-
-# parallel = TRUE imposes proportional odds structure
-# 2 intercepts for 3 y categories 
-fit <-  vglm(MNHLTH31 ~ AGELAST + SDENICPROD,
+null <-  vglm(MNHLTH31 ~ 1,
              family = cumulative(parallel = TRUE),
              data = filter_df)
 
-summary(fit)  # same effects for all 3 logits
+pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
 ```
 
+#### Difference between smokers and non smokers
+
 ```{r}
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), SDENICPROD = "2 NO")
+smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
+n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
+```
+
+
+```{r}
+# For smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
+  grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST") +
+  grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+
+```{r}
+# For non smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), by = 1))
 preds = predict(fit, df_pred) # check that they sum to 1
 cum_probabilities = t(apply(preds,1,plogis))
 
@@ -1061,57 +1025,23 @@ matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2,
   grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.14))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
         ylab = "Category probabilites", xlab = "AGELAST") +
   grid()
-legend("right",
+legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
-```
-
-```{r}
-null <-  vglm(MNHLTH31 ~ 1,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(null)-deviance(fit),
-df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
-```
-
-```{r}
-fit2 <-  vglm(MNHLTH31 ~ SDENICPROD + SEX + AGELAST,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(fit)-deviance(fit2),
-df=df.residual(fit)-df.residual(fit2), lower.tail=FALSE)
-
-
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), SDENICPROD = "2 NO", SEX = "2 FEMALE")
-preds = predict(fit2, df_pred) # check that they sum to 1
-cum_probabilities = t(apply(preds,1,plogis))
-
-par(mfrow = c(1,2))
-matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
-  grid()
-legend("bottomleft", 
-       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
-category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
-preds = predict(fit, df_pred, type = "response") # check that they are equivalent
-matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
-legend("right",
-       legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.37))
+mtext("Perceived Mental Health Status for Non-Smokers", outer = TRUE, cex = 1.5, line = -3)
 ```
 
 
 
-## General Health E-Smoking
+## General Health E - Smoking
 ```{r}
 filter_df <-small_df %>% select(ADGENH42, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -1130,6 +1060,7 @@ df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
+  title("General Health by Age") + 
   grid()
 legend("left",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
@@ -1145,29 +1076,28 @@ anova(fit, test="LRT")
 ```
 
 ```{r}
-filter_df$MNHLTH31 = ordered(filter_df$ADGENH42) 
-
-# parallel = TRUE imposes proportional odds structure
-# 2 intercepts for 3 y categories 
-fit <-  vglm(MNHLTH31 ~ AGELAST + SDENICPROD,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-
-summary(fit)  # same effects for all 3 logits
+smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
+n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
 ```
 
 ```{r}
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), SDENICPROD = "2 NO")
-preds = predict(fit, df_pred) # check that they sum to 1
+# For smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
 cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
   grid()
-legend("left", 
+legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
@@ -1175,36 +1105,29 @@ matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 ```{r}
-null <-  vglm(MNHLTH31 ~ 1,
+# For not smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
              family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(null)-deviance(fit),
-df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
-```
+             data = n_smk_df)
 
-```{r}
-fit2 <-  vglm(MNHLTH31 ~ SDENICPROD + SEX + AGELAST,
-             family = cumulative(parallel = TRUE),
-             data = filter_df)
-pchisq(deviance(fit)-deviance(fit2),
-df=df.residual(fit)-df.residual(fit2), lower.tail=FALSE)
-
-
-df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), SDENICPROD = "2 NO", SEX = "2 FEMALE", ADSMOK42 = "2 NO")
-preds = predict(fit2, df_pred) # check that they sum to 1
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
 cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
   grid()
-legend("left", 
+legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
@@ -1212,7 +1135,9 @@ matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1, cex = 0.6)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for NOT Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 ## Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
