@@ -550,8 +550,8 @@ df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
 fit2 <-  vglm(mental ~ ADSMOK42 + SEX + AGELAST,
              family = cumulative(parallel = TRUE),
              data = filter_df)
-pchisq(deviance(fit)-deviance(fit2),
-df=df.residual(fit)-df.residual(fit2), lower.tail=FALSE)
+pchisq(deviance(null)-deviance(fit2),
+df=df.residual(null)-df.residual(fit2), lower.tail=FALSE)
 
 
 df_pred = data.frame(AGELAST = seq(min(filter_df$AGELAST), max(filter_df$AGELAST), l = 50), ADSMOK42 = "2 NO", SEX = "2 FEMALE")
@@ -563,14 +563,83 @@ matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2,
         ylab = "Cumulative probabilites", xlab = "AGELAST") 
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
-       col = c(1,2,3,4,5), lty = 1)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.8, xpd = TRUE,
+       inset = c(0, 0.12))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit2, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.8, xpd = TRUE,
+       inset = c(0, 0.32))
+
+par(mar = c(5, 4, 4, 8) + 0.1)
+```
+
+#### Difference between smokers and non smokers
+
+```{r}
+smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
+n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
+```
+
+
+```{r}
+# For smokers
+fit <- vglm(mental ~ SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), l = 50), SEX = "2 FEMALE")
+preds = predict(fit, df_pred) # check that they sum to 1
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST") 
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.8, xpd = TRUE,
+       inset = c(0, 0.4))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
         ylab = "Category probabilites", xlab = "AGELAST")
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
-       col = c(1,2,3,4,5), lty = 1)
+       col = c(1,2,3,4,5), lty = 1, cex = 0.7, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+
+```{r}
+# For non smokers
+fit <- vglm(mental ~ SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), l = 50), SEX = "2 FEMALE")
+preds = predict(fit, df_pred) # check that they sum to 1
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST") 
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.8, xpd = TRUE,
+       inset = c(0, 0.14))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.7, xpd = TRUE,
+       inset = c(0, 0.37))
+mtext("Perceived Mental Health Status for Non-Smokers", outer = TRUE, cex = 1.5, line = -3)
 ```
 
 
@@ -666,7 +735,7 @@ legend("bottomleft",
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1)
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
-preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+preds = predict(fit2, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
         ylab = "Category probabilites", xlab = "AGELAST")
 legend("topright",
