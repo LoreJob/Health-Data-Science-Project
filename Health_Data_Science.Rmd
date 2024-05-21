@@ -671,18 +671,18 @@ diseases_percentages = small_df %>% filter(AGELAST >= 18) %>%
 
 
 diseases_percentages %>% filter(ADSMOK42 != "-1 INAPPLICABLE") %>%
-  ggplot(aes(x = condition, y = percentage*100, fill = condition)) +
-    geom_col() +
+  mutate(ADSMOK42 = factor(ADSMOK42, levels = c("1 YES","2 NO"), 
+                           labels = c("Smokers","Non-Smokers"))) %>%
+  mutate(ADSMOK42 = relevel(ADSMOK42, "Non-Smokers")) %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = ADSMOK42)) +
+    geom_col(position = position_dodge()) +
     coord_flip() +
     labs(
-      title = "Percentage of people 18 or Older Who Report Specific Health Diseases",
+      title = "Percentage of people 18 or Older Who Report Specific Diseases",
       x = "",
       y = "Percentage"
     ) +
-  facet_wrap(~ADSMOK42,
-             labeller = labeller(category = c("1 YES" = "Smokers", "2 NO" = "non-Smokers")))+
-    theme_classic() +
-    theme(legend.position = "none")
+  theme(legend.title = element_blank())
 
 
 diseases_percentages %>% filter(ADSMOK42 == "1 YES") %>%
@@ -708,6 +708,43 @@ diseases_percentages %>% filter(ADSMOK42 == "2 NO") %>%
     ) +
     theme_classic() +
     theme(legend.position = "none")
+
+```
+```{r}
+# recreate the plot above but with electronic nicotine
+
+diseases_percentages = small_df %>% filter(AGELAST >= 18) %>%
+  select(SDENICPROD, all_of(health_disease_variables)) %>% group_by(SDENICPROD) %>%
+  summarise(ASTHDX = sum(ASTHDX == "1 YES")/sum(ASTHDX %in% c("1 YES","2 NO")),
+            ARTHDX = sum(ARTHDX == "1 YES")/sum(ARTHDX %in% c("1 YES","2 NO")),
+            CALUNG = sum(CALUNG == "1 YES")/sum(CALUNG %in% c("1 YES","2 NO")),
+            CHOLDX = sum(CHOLDX == "1 YES")/sum(CHOLDX %in% c("1 YES","2 NO")),
+            CHBRON31 = sum(CHBRON31 == "1 YES")/sum(CHBRON31 %in% c("1 YES","2 NO")),
+            DIABDX_M18 = sum(DIABDX_M18 == "1 YES")/sum(DIABDX_M18 %in% c("1 YES","2 NO")),
+            EMPHDX = sum(EMPHDX == "1 YES")/sum(EMPHDX %in% c("1 YES","2 NO")),
+            HIBPDX = sum(HIBPDX == "1 YES")/sum(HIBPDX %in% c("1 YES","2 NO")),
+            STRKDX = sum(STRKDX == "1 YES")/sum(STRKDX %in% c("1 YES","2 NO"))) %>%
+  pivot_longer(cols = health_disease_variables) %>%
+  rename(percentage = value , condition = name) %>%
+  mutate(condition = factor(condition,
+                            levels = health_disease_variables,
+                            labels = condition_labels))
+
+
+
+diseases_percentages %>% filter(SDENICPROD %in% c("1 YES","2 NO")) %>%
+  mutate(SDENICPROD = factor(SDENICPROD, levels = c("1 YES","2 NO"), 
+                           labels = c("Users of E-nic. Prods","Non-Users"))) %>%
+  mutate(SDENICPROD = relevel(SDENICPROD, "Non-Users")) %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = SDENICPROD)) +
+    geom_col(position = position_dodge()) +
+    coord_flip() +
+    labs(
+      title = "Disease Rates among Users of Electronic Nicotine Products",
+      x = "",
+      y = "Percentage"
+    ) +
+  theme(legend.title = element_blank())
 
 ```
 
@@ -865,14 +902,88 @@ ggplot(chisq_df_diseases, aes(x = name, y = value)) +
        subtitle = "P-value of Chi squared test, controlling for age groups",
        x = "", y ="")+
   scale_x_discrete(labels = c("p_val_full_data" = "All patients",
-                              "p_val_65plus_data" = "ages 45-64",
-                              "p_val_45_64_data" = "ages 65 plus")) +
+                              "p_val_65plus_data" = "65 plus",
+                              "p_val_45_64_data" = "45-64")) +
   theme_minimal() + theme(axis.text.x = element_text(size = 7))
   
 
 
 
 ```
+
+
+
+```{r}
+#the above graph is equivalent to this one
+
+or_data_all = expand.grid(diseases = health_disease_variables,
+                      age = "all",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_all)){
+  var_of_interest = as.character(or_data_all$diseases[i])
+  or = small_df %>%
+    select(ADSMOK42,var_of_interest)%>%
+    filter(ADSMOK42 %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_all[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_all[i,"lower"] = or$measure[2,"lower"]
+  or_data_all[i,"upper"] = or$measure[2,"upper"]
+}
+
+or_data_45_64 = expand.grid(diseases = health_disease_variables,
+                      age = "45_64",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_45_64)){
+  var_of_interest = as.character(or_data_45_64$diseases[i])
+  or = small_df %>% filter(age_group == "45-64") %>%
+    select(ADSMOK42,var_of_interest)%>%
+    filter(ADSMOK42 %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_45_64[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_45_64[i,"lower"] = or$measure[2,"lower"]
+  or_data_45_64[i,"upper"] = or$measure[2,"upper"]
+}
+
+
+or_data_65plus = expand.grid(diseases = health_disease_variables,
+                      age = "65plus",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_65plus)){
+  var_of_interest = as.character(or_data_65plus$diseases[i])
+  or = small_df %>% filter(age_group == "65+") %>%
+    select(ADSMOK42,var_of_interest)%>%
+    filter(ADSMOK42 %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_65plus[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_65plus[i,"lower"] = or$measure[2,"lower"]
+  or_data_65plus[i,"upper"] = or$measure[2,"upper"]
+}
+
+or_data = rbind(or_data_all,or_data_45_64,or_data_65plus)
+
+or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
+  ggplot(aes(x = age)) + geom_point(aes(y = estimate)) +
+  geom_segment(aes(x = age, xend = age, y = lower, yend = upper))+
+  geom_hline(aes(yintercept  = 1), col = "red")+
+  facet_wrap(~diseases, scales = "free") +
+  labs(title="Odds ratio of disease diagnosis for Smokers and Non-Smokers",
+       subtitle = "95% confidence intervals for different age groups",
+       x = "", y ="")+
+  scale_x_discrete(labels = c("all" = "All",
+                              "65plus" = "65 and over" ,
+                              "45_64" = "45-64")) +
+  theme_minimal() + theme(axis.text.x = element_text(size = 7))
+```
+
 
 ### now we do the contingency tables for mental health variables instead of physical health
 
@@ -977,6 +1088,76 @@ table_multi_cat(small_df, "ADSMOK42", "ADSAD42") %>% as_tibble() %>%
 
 ```
 
+```{r}
+# looking at how the contingency table for perceived mental health and smoking
+# is different in the different age groups
+age_18_24 = table_multi_cat_age(small_df, "ADSMOK42", "MNHLTH31", "18-24") %>% as_tibble %>%
+  mutate(age = "18-24")
+age_25_34 = table_multi_cat_age(small_df, "ADSMOK42", "MNHLTH31", "25-34") %>% as_tibble %>%
+  mutate(age = "25-34")
+age_35_44 = table_multi_cat_age(small_df, "ADSMOK42", "MNHLTH31", "35-44") %>% as_tibble %>%
+  mutate(age = "35-44")
+age_45_64 = table_multi_cat_age(small_df, "ADSMOK42", "MNHLTH31", "45-64") %>% as_tibble %>%
+  mutate(age = "45-64")
+age_65plus = table_multi_cat_age(small_df, "ADSMOK42", "MNHLTH31", "65+") %>% as_tibble %>%
+  mutate(age = "65+")
+
+all_tables = rbind(age_18_24,age_25_34,age_35_44,age_45_64,age_65plus)
+
+all_tables %>% mutate(age = factor(age)) %>%
+  ggplot(aes(x = n, fill = MNHLTH31, y = ADSMOK42)) +
+  geom_col(orientation = "y") +
+  facet_grid(rows = vars(age))+
+  labs(title = "Perceived Mental Health and smoking in different age groups", y = "",
+       subtitle = "Contingency tables with conditional probability", x="frequency", fill="Perceived Mental Health") +
+  scale_y_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))+
+  theme(strip.text.y = element_text(angle = 0))
+
+
+
+
+
+```
+
+
+```{r}
+# looking at how the contingency table for "ADDPRS42" and smoking
+# is different in the different age groups
+age_18_24 = table_multi_cat_age(small_df, "ADSMOK42", "ADDPRS42", "18-24") %>% as_tibble %>%
+  mutate(age = "18-24")
+age_25_34 = table_multi_cat_age(small_df, "ADSMOK42", "ADDPRS42", "25-34") %>% as_tibble %>%
+  mutate(age = "25-34")
+age_35_44 = table_multi_cat_age(small_df, "ADSMOK42", "ADDPRS42", "35-44") %>% as_tibble %>%
+  mutate(age = "35-44")
+age_45_64 = table_multi_cat_age(small_df, "ADSMOK42", "ADDPRS42", "45-64") %>% as_tibble %>%
+  mutate(age = "45-64")
+age_65plus = table_multi_cat_age(small_df, "ADSMOK42", "ADDPRS42", "65+") %>% as_tibble %>%
+  mutate(age = "65+")
+
+all_tables = rbind(age_18_24,age_25_34,age_35_44,age_45_64,age_65plus)
+
+all_tables %>% mutate(age = factor(age)) %>%
+  ggplot(aes(x = n, fill = ADDPRS42, y = ADSMOK42)) +
+  geom_col(orientation = "y") +
+  facet_grid(rows = vars(age))+
+  labs(subtitle = "How many days in the past 2 weeks people felt down/depressed/hopeless",
+       y = "", fill="How many days people felt down",
+       title = "Contingency table: Smoking and feeling down", x="frequency", ) +
+  scale_y_discrete(labels = c("1 YES" = "Smokers",
+                              "2 NO" = "Non Smokers"))+
+  theme(strip.text.y = element_text(angle = 0))
+
+
+
+
+
+
+```
+
+
+
+
 ### Contingency tables for general health and smoking
 ```{r}
 # variables about general health
@@ -1057,7 +1238,11 @@ Summary of key points:
 -Stroke: strong association, correct direction
 
 ```{r}
-
+# I don't like this plot anymore, showing the p-value makes almost no sense
+# it made sense for ADSMOK42 because smokers always had higher rates than non smokers
+# however for SDENICPROD for some diseases users have lower rates than non users
+# so I will try to plot the odds ratio instead, which will let us see in which direction
+# there is association -Giuseppe
 chisq_df_diseases = data.frame(diseases = health_disease_variables,
                                p_val_full_data= rep(NA, length(health_disease_variables)),
                                p_val_65plus_data= rep(NA, length(health_disease_variables)),
@@ -1092,10 +1277,86 @@ Electronic Nicotine Product usage and various diseases",
        subtitle = "P-value of Chi squared test, controlling for age groups",
        x = "", y ="")+
   scale_x_discrete(labels = c("full_data" = "All patients",
-                              "age_65plus" = "ages 45-64",
-                              "age_45_64" = "ages 65 plus")) +
+                              "age_65plus" = "ages 65 plus" ,
+                              "age_45_64" = "ages 45-64")) +
   theme_minimal() + theme(axis.text.x = element_text(size = 7))
 ```
+
+```{r}
+#odds ratio
+#odds of diseases for users/ odds of diseases for non users
+
+or_data_all = expand.grid(diseases = health_disease_variables,
+                      age = "all",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_all)){
+  var_of_interest = as.character(or_data_all$diseases[i])
+  or = small_df %>%
+    select(SDENICPROD,var_of_interest)%>%
+    filter(SDENICPROD %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_all[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_all[i,"lower"] = or$measure[2,"lower"]
+  or_data_all[i,"upper"] = or$measure[2,"upper"]
+}
+
+or_data_45_64 = expand.grid(diseases = health_disease_variables,
+                      age = "45_64",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_45_64)){
+  var_of_interest = as.character(or_data_45_64$diseases[i])
+  or = small_df %>% filter(age_group == "45-64") %>%
+    select(SDENICPROD,var_of_interest)%>%
+    filter(SDENICPROD %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_45_64[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_45_64[i,"lower"] = or$measure[2,"lower"]
+  or_data_45_64[i,"upper"] = or$measure[2,"upper"]
+}
+
+
+or_data_65plus = expand.grid(diseases = health_disease_variables,
+                      age = "65plus",estimate = NA,
+                      lower = NA, upper = NA)
+
+for(i in 1:nrow(or_data_65plus)){
+  var_of_interest = as.character(or_data_65plus$diseases[i])
+  or = small_df %>% filter(age_group == "65+") %>%
+    select(SDENICPROD,var_of_interest)%>%
+    filter(SDENICPROD %in% c("1 YES", "2 NO"),
+           .data[[var_of_interest]] %in% c("1 YES", "2 NO")) %>%
+    mutate(across(c(1,2), factor)) %>%
+    table() %>% epitools::oddsratio(method = "wald", correction = F)
+  or_data_65plus[i,"estimate"] = or$measure[2,"estimate"]
+  or_data_65plus[i,"lower"] = or$measure[2,"lower"]
+  or_data_65plus[i,"upper"] = or$measure[2,"upper"]
+}
+
+or_data = rbind(or_data_all,or_data_45_64,or_data_65plus)
+
+or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
+  ggplot(aes(x = age)) + geom_point(aes(y = estimate)) +
+  geom_segment(aes(x = age, xend = age, y = lower, yend = upper))+
+  geom_hline(aes(yintercept  = 1), col = "red")+
+  facet_wrap(~diseases, scales = "free") +
+  labs(title="Odds Ratio of Disease Diagnosis for Users and Non-Users of E-Nic. Prods",
+       subtitle = "95% confidence intervals for different age groups",
+       x = "", y ="")+
+  scale_x_discrete(labels = c("all" = "All",
+                              "65plus" = "65 and over" ,
+                              "45_64" = "45-64")) +
+  theme_minimal() + theme(axis.text.x = element_text(size = 7))
+
+```
+
+
+
 
 
 ### Electronic nicotine product usage and general health indicators
