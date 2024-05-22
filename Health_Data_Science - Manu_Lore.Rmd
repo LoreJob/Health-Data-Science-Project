@@ -509,6 +509,14 @@ null <-  vglm(MNHLTH31 ~ 1,
 pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
 ```
 
+```{r}
+fit <- vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+
+
 #### Difference between smokers and non smokers
 
 ```{r}
@@ -975,6 +983,14 @@ null <-  vglm(MNHLTH31 ~ 1,
 pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
 ```
 
+```{r}
+fit <- vglm(MNHLTH31 ~ SDENICPROD + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+
+
 #### Difference between smokers and non smokers
 
 ```{r}
@@ -1082,6 +1098,16 @@ anova(fit, test="LRT")
 
 ```{r}
 filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
+
+fit <- vglm(ADGENH42 ~ SDENICPROD + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+
+### Difference btween smokers and non smokers
+
+```{r}
 smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
 n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
 ```
