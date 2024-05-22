@@ -1026,7 +1026,7 @@ legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
        inset = c(0, 0.15))
-mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+mtext("Perceived Mental Health Status for E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 
@@ -1057,7 +1057,7 @@ legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
        inset = c(0, 0.37))
-mtext("Perceived Mental Health Status for Non-Smokers", outer = TRUE, cex = 1.5, line = -3)
+mtext("Perceived Mental Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line = -3)
 ```
 
 
@@ -1139,7 +1139,7 @@ legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
        inset = c(0, 0.08))
-mtext("General Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+mtext("General Health Status for E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 ```{r}
@@ -1169,7 +1169,7 @@ legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
        inset = c(0, 0.08))
-mtext("General Health Status for NOT Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+mtext("General Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
 ## Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
