@@ -785,30 +785,6 @@ cont_tables_age = function(data, explanatory_var, var_of_interest,
   tbl
 }
 
-#testing the functions
-
-#smokers and diabetes
-#conditional probabilities, for all observations, and for the last two age groups
-# cont_tables(small_df,"ADSMOK42","DIABDX_M18") %>% knitr::kable()
-# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64")
-# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+")
-# 
-# #chisquared tests for those tables
-# cont_tables(small_df,"ADSMOK42","DIABDX_M18", F) %>% chisq.test(correct = F)
-# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
-# cont_tables_age(small_df,"ADSMOK42","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
-# 
-# # electronic nicotine and diabetes
-# #conditional probabilities, for all observations, and for the last two age groups
-# cont_tables(small_df,"SDENICPROD","DIABDX_M18")
-# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64")
-# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+")
-# 
-# #chisquared tests for those tables
-# cont_tables(small_df,"SDENICPROD","DIABDX_M18", F) %>% chisq.test(correct = F)
-# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","45-64",F) %>% chisq.test(correct = F)
-# cont_tables_age(small_df,"SDENICPROD","DIABDX_M18","65+",F) %>% chisq.test(correct = F)
-
 ```
 
 ```{r}
@@ -828,8 +804,6 @@ titles_health_disease <- c(
   DIABDX_M18 = "Diabetes Diagnosis",
   EMPHDX = "Emphysema Diagnosis",
   HIBPDX = "High Blood Pressure Diagnosis",
-  OHRTDX = "Heart Disease Diagnosis",
-  OHRTTYPE = "Type of Heart Disease Diagnosis",
   STRKDX = "Stroke Diagnosis"
 )
 
@@ -1197,6 +1171,49 @@ table_multi_cat(small_df, "ADSMOK42", "WLKLIM53") %>% as_tibble() %>%
                               "2 NO" = "Non Smokers"))
 
 ```
+```{r}
+# odds ratio: smoking and walking limitations in different age groups
+
+table_multi_cat_control = function(data, explanatory_var, var_of_interest, cond_prob = T){
+  tbl = data %>%
+    select(explanatory_var, var_of_interest,age_group)%>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           !.data[[var_of_interest]] %in% c("-15 CANNOT BE COMPUTED",
+                                            "-1 INAPPLICABLE",
+                                            "-8 DK","-7 REFUSED"))%>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  if (cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+  }
+  tbl
+}
+
+
+
+table_multi_cat_control(small_df, "ADSMOK42", "WLKLIM53",F) %>% as_tibble() %>%
+  filter(age_group != "0-18") %>%
+  group_by(age_group) %>%
+  summarise(or_estimate = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"estimate"],
+            or_lower = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"lower"],
+            or_upper = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"upper"]) %>%
+  mutate(age_group = factor(age_group)) %>%
+  ggplot() +
+  geom_point(aes(x = age_group, y = or_estimate)) +
+  geom_segment(aes(x = age_group,xend=age_group,
+                   y = or_lower, yend=or_upper))+
+  geom_hline(aes(yintercept =1), col = "red") +
+  labs(title = "Smoking and Limitation in Physical Functioning across different ages",
+       subtitle = "95% confidence intervals for odds ratio",
+       x = "Age Group",
+       y="odds ratio")
+
+```
+
+
 
 
 ## Contingency tables for electronic nicotine product
@@ -1393,12 +1410,48 @@ table_multi_cat(small_df, "SDENICPROD", "ADENGY42") %>% as_tibble() %>%
 
 table_multi_cat(small_df, "SDENICPROD", "WLKLIM53") %>% as_tibble() %>%
   ggplot() + geom_col(aes(x = SDENICPROD, y = n, fill = WLKLIM53)) +
-  labs(title = "Contingency table: Electronic nicotine product usage and Limitation in Physical Functioning", x = "",
-       y="frequency", fill="") +
+  labs(title = "Electronic nicotine product usage and Limitation in Physical Functioning",
+       subtitle = "Contingency table with conditional probability",
+       x = "",
+       y="frequency", fill="Walking Limitation") +
   scale_x_discrete(labels = c("1 YES" = "users",
-                              "2 NO" = "Non users"))
+                              "2 NO" = "Non users"))+
+  scale_fill_discrete(labels = c("Yes", "No"))
 
 ```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+# odds ratio: E-nic usage and walking limitations in different age groups
+
+table_multi_cat_control(small_df, "SDENICPROD", "WLKLIM53",F) %>% as_tibble() %>%
+  filter(age_group != "0-18") %>%
+  group_by(age_group) %>%
+  summarise(or_estimate = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"estimate"],
+            or_lower = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"lower"],
+            or_upper = epitools::oddsratio(n,method = "wald",
+                                              correction = F)$measure[2,"upper"]) %>%
+  mutate(age_group = factor(age_group)) %>%
+  ggplot() +
+  geom_point(aes(x = age_group, y = or_estimate)) +
+  geom_segment(aes(x = age_group,xend=age_group,
+                   y = or_lower, yend=or_upper))+
+  geom_hline(aes(yintercept =1), col = "red") +
+  labs(title = "E-nicotine usage and Limitation in Physical Functioning across different ages",
+       subtitle = "95% confidence intervals for odds ratio",
+       x = "Age Group",
+       y="odds ratio")
+```
+
+
 
 
 ### Mental health and electronic nicotine product usage
@@ -1463,16 +1516,71 @@ table_multi_cat(small_df, "SDENICPROD", "ADSAD42") %>% as_tibble() %>%
 
 ```
 
+
+```{r}
+# mental health controlling for age
+
+# looking at how the contingency table for perceived mental health and e-nic. usage
+# is different in the different age groups
+age_18_24 = table_multi_cat_age(small_df, "SDENICPROD", "MNHLTH31", "18-24") %>% as_tibble %>%
+  mutate(age = "18-24")
+age_25_34 = table_multi_cat_age(small_df, "SDENICPROD", "MNHLTH31", "25-34") %>% as_tibble %>%
+  mutate(age = "25-34")
+age_35_44 = table_multi_cat_age(small_df, "SDENICPROD", "MNHLTH31", "35-44") %>% as_tibble %>%
+  mutate(age = "35-44")
+age_45_64 = table_multi_cat_age(small_df, "SDENICPROD", "MNHLTH31", "45-64") %>% as_tibble %>%
+  mutate(age = "45-64")
+age_65plus = table_multi_cat_age(small_df, "SDENICPROD", "MNHLTH31", "65+") %>% as_tibble %>%
+  mutate(age = "65+")
+
+all_tables = rbind(age_18_24,age_25_34,age_35_44,age_45_64,age_65plus)
+
+all_tables %>% mutate(age = factor(age)) %>%
+  ggplot(aes(x = n, fill = MNHLTH31, y = SDENICPROD)) +
+  geom_col(orientation = "y") +
+  facet_grid(rows = vars(age))+
+  labs(title = "Perceived Mental Health and E-Nic. in different age groups", y = "",
+       subtitle = "Contingency tables with conditional probability", x="frequency", fill="Perceived Mental Health") +
+  scale_y_discrete(labels = c("1 YES" = "Users",
+                              "2 NO" = "Non-Users"))+
+  theme(strip.text.y = element_text(angle = 0))
+
+```
+```{r}
+income_mental_health = small_df %>% mutate(income_group = cut(FAMINC21,
+                                    breaks = c(-Inf,36000,90000, Inf),
+                  labels = c("low","medium","high"),
+                  right = FALSE)) %>% select(income_group, ADSMOK42, SDENICPROD,MNHLTH31)
+
+
+table_multi_cat_income = function(data, explanatory_var, var_of_interest,
+                                  group, cond_prob = T){
+  tbl = data %>% filter(income_group == group) %>%
+    select(explanatory_var, var_of_interest,income_group)%>%
+    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
+           !.data[[var_of_interest]] %in% c("-15 CANNOT BE COMPUTED",
+                                            "-1 INAPPLICABLE",
+                                            "-8 DK","-7 REFUSED"))%>%
+    mutate(across(c(1,2), factor)) %>%
+    table()
+  if (cond_prob){
+    tbl = tbl %>% prop.table(margin = 1)
+  }
+  tbl
+}
+
+
+
+
+table_multi_cat_income(income_mental_health, "ADSMOK42", "MNHLTH31","low",F)
+
+
+
+```
+
+
 Summary:
 
 the general health of e-nicotine products users is the not much lower than that of non users. However there is a bigger gap in the mental health of the two groups: in the data we see that non users tend to have higher values of good mental health
 
-Things to do: 
-- 1 Introduction
-- 2 Exploratory analysis: go deep into the dataset analyzing the most important
-    variables.
-- 3 Effect of smoking/nicotine on physical health: understand how much is dangerous 
-    the abuse of smoke for the Pysichal healt
-- 4 Effect of smoking/nicotine on mental health:understand how much is dangerous 
-    the abuse of smoke for the mental healt
-- 5 Conclusion
+
