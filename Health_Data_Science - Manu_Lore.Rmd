@@ -482,6 +482,7 @@ filter_df <-small_df %>% select(MNHLTH31, ADSMOK42, SEX, AGELAST) %>% filter(row
 filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "1 EXCELLENT")
 filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
 filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31)
 ```
 
 
@@ -528,21 +529,21 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST")+
-  grid()
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.4))
+       inset = c(0, 0.08))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Category probabilites", xlab = "AGELAST") 
+grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.08))
+       inset = c(0, 0.69))
 mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
@@ -559,8 +560,8 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
@@ -568,8 +569,8 @@ legend("bottomleft",
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Category probabilites", xlab = "AGELAST")
+grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
@@ -597,10 +598,10 @@ df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 N
 
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
-        ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
-  title("General Health by Age") + 
-  grid()
-legend("left",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2) 
+title("General Health by Age")  
+grid()
+legend("bottomleft",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
 ```
 
 ```{r}
@@ -614,6 +615,8 @@ anova(fit, test="LRT")
 ```
 
 ```{r}
+filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
+
 smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
 n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
 ```
@@ -949,6 +952,8 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 
 
 ```{r}
+filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31)
+
 df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
 
 fit <- vglm(MNHLTH31 ~ AGELAST,
@@ -956,9 +961,9 @@ fit <- vglm(MNHLTH31 ~ AGELAST,
              data = filter_df)
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
-        ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
-  title("Mental Health by Age") + 
-  grid()
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2)
+title("Mental Health by Age")  
+grid()
 legend("left",legend = unique(filter_df$MNHLTH31), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
 
@@ -990,21 +995,21 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST")+
-  grid()
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.4))
+       inset = c(0, 0.5))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Category probabilites", xlab = "AGELAST") 
+grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.08))
+       inset = c(0, 0.15))
 mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
@@ -1021,8 +1026,8 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
@@ -1030,8 +1035,8 @@ legend("bottomleft",
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
-  grid()
+        ylab = "Category probabilites", xlab = "AGELAST")
+grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
@@ -1059,10 +1064,10 @@ df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2
 
 
 matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
-        ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
-  title("General Health by Age") + 
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2)
+  title("General Health by Age") 
   grid()
-legend("left",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+legend("bottomleft",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
 ```
 
 ```{r}
@@ -1076,6 +1081,7 @@ anova(fit, test="LRT")
 ```
 
 ```{r}
+filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
 smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
 n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
 ```
@@ -1092,16 +1098,16 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST")+
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
   grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.4))
+       inset = c(0, 0.25))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
+        ylab = "Category probabilites", xlab = "AGELAST") 
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
@@ -1127,11 +1133,11 @@ matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2,
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
        col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
-       inset = c(0, 0.4))
+       inset = c(0, 0.3))
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
+        ylab = "Category probabilites", xlab = "AGELAST") 
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
