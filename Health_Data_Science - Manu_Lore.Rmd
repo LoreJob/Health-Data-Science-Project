@@ -38,6 +38,7 @@ knitr::opts_chunk$set(echo = TRUE)
   library(remotes)
   library(jtools)
   library(VGAM)
+  library(boot)
 #  library(MEPS)
 ```
 
@@ -515,6 +516,25 @@ fit <- vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
              data = filter_df)
 summary(fit)
 ```
+```{r}
+data <- filter_df
+formula <- MNHLTH31 ~ ADSMOK42 + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
 
 
 #### Difference between smokers and non smokers
@@ -621,10 +641,37 @@ print(pseudo_R2 <- 1 - deviance(fit) / deviance(null))
 
 anova(fit, test="LRT")
 ```
-
 ```{r}
 filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
+fit <- vglm(ADGENH42 ~ ADSMOK42 + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
 
+
+```{r}
+data <- filter_df
+formula <- ADGENH42 ~ ADSMOK42 + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+
+```{r}
 smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
 n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
 ```
@@ -989,7 +1036,25 @@ fit <- vglm(MNHLTH31 ~ SDENICPROD + SEX + AGELAST,
              data = filter_df)
 summary(fit)
 ```
+```{r}
+data <- filter_df
+formula <- MNHLTH31  ~ SDENICPROD  + SEX + AGELAST
 
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
 
 #### Difference between smokers and non smokers
 
@@ -1086,6 +1151,9 @@ matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
 legend("bottomleft",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
 ```
 
+
+
+
 ```{r}
 confint(fit)
 
@@ -1104,6 +1172,27 @@ fit <- vglm(ADGENH42 ~ SDENICPROD + SEX + AGELAST,
              data = filter_df)
 summary(fit)
 ```
+```{r}
+data <- filter_df
+formula <- ADGENH42 ~ SDENICPROD + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+
 
 ### Difference btween smokers and non smokers
 
@@ -1209,6 +1298,7 @@ unique(small_df$ADGENH42)
 
 summ(fit, model.info = F)
 ```
+
 
 
 
