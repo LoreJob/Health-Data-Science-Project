@@ -213,6 +213,9 @@ small_df %>% summary()
 
 # Smoking Cigarettes
 
+We decide to start with the smoking predictor. We want to keep only *AGE*, *SEX* and *AGEGROUP* as other predictors. Using predictors without interations we can detect better the statistical significance of the model. 
+
+
 ## Logistic regression for physical health
 
 ```{r}
@@ -220,8 +223,171 @@ values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPP
 ```
 
 
-### Lung Cancer 
+### Arthritis 
 
+```{r}
+filter_df <- small_df %>% select(ARTHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$ARTHDX <- relevel(filter_df$ARTHDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(ARTHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(ARTHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of ARTHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+
+### Diabetes
+```{r}
+filter_df <- small_df %>% select(DIABDX_M18, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$DIABDX_M18 <- relevel(filter_df$DIABDX_M18, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(DIABDX_M18 ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(DIABDX_M18 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of DIABDX_M18 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+
+### Emphisema
+```{r}
+filter_df <- small_df %>% select(EMPHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$EMPHDX <- relevel(filter_df$EMPHDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(EMPHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(EMPHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of EMPHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+### Stroke
+
+```{r}
+filter_df <- small_df %>% select(STRKDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$STRKDX <- relevel(filter_df$STRKDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(STRKDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(STRKDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of STRKDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+### Lung Cancer 
 ```{r}
 filter_df <- small_df %>% select(CALUNG, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -235,8 +401,6 @@ fit <- glm(CALUNG ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomi
 
 summary(fit)
 ```
-
-
 
 ```{r}
 data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(CALUNG == "1 YES"), tot = n()) %>%
@@ -430,6 +594,10 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+As we can say we obtained a lot of different results, both negative and positive,
+but we can see that for some models there is a direct correlation with *AGE*. To prove this 
+we can try if some physical deseases have some of connection.
+
 #### Trying to see if Colesterol and Blood pressure are correlated
 
 ```{r}
@@ -472,6 +640,8 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = HIBPDX)) +
 
 
 ## Multilogit regression for Mental Health
+
+Now to evaluate the mental health status we need to change the type of the regression. In the first part we used the Logistic Regression, but for this part we need to use the Multinomial Logistic Regression. MLR is a classification method that modify logistic regression to multiclass problems, i.e. with more than two possible discrete outcomes (I promise, is just a case that is very similar to the Wikipedia description). 
 
 ### Perceived Mental Health Status 
 
@@ -516,6 +686,18 @@ fit <- vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
              data = filter_df)
 summary(fit)
 ```
+
+Oh no! There is a problem in our regression, what is that? The Hauck-Donner effect?
+It reminds me a name of a music instrument brand...nevermind.
+
+The Hauck-Donner effect is a problem that can occur if we use small dataframe, indicates that
+the significance of our model can be false. But hou can we solvit? Don't worry, is very simple.
+
+We bootstrapped the original dataframe for 100 times (better more but our pc are not so
+powerful).
+
+
+
 ```{r}
 data <- filter_df
 formula <- MNHLTH31 ~ ADSMOK42 + SEX + AGELAST
@@ -535,7 +717,7 @@ bootstrap_results
 
 boot.ci(bootstrap_results, type = "basic")
 ```
-
+Fortunatly the boostrap confirm the robustness of our model. 
 
 #### Difference between smokers and non smokers
 
@@ -988,7 +1170,123 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   theme_minimal()
 ```
 
+### Lung cancer
 
+```{r}
+filter_df <- small_df %>% select(CALUNG, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CALUNG ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(CALUNG == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+### Bronchitis
+
+```{r}
+filter_df <- small_df %>% select(CHBRON31, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CHBRON31 <- relevel(filter_df$CHBRON31, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHBRON31 ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(CHBRON31 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CHBRON31 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+
+### Emphysema
+
+```{r}
+filter_df <- small_df %>% select(EMPHDX, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$EMPHDX <- relevel(filter_df$EMPHDX, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(EMPHDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(EMPHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of EMPHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
 
 
 ## Multilogit regression for Mental Health
