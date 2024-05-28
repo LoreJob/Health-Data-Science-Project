@@ -213,8 +213,8 @@ small_df %>% summary()
 
 # Smoking Cigarettes
 
-We decide to start with the smoking predictor. We want to keep only *AGE*, *SEX* and *AGEGROUP* as other predictors. Using predictors without interations we can detect better the statistical significance of the model. 
-
+Now we started to fit some models for Smoking and E-Smoking. We decided to analyse the two variables in distinct ways because...
+We decide to start with the smoking predictor. We want to keep only *AGE*, *SEX* and *AGEGROUP* as other predictors.
 
 ## Logistic regression for physical health
 
@@ -947,6 +947,8 @@ Also in this case we see that non-smokers tend to have better General Health. No
 
 # E-Smoking
 
+Form now on we will repeat the same steps for the E-smoking
+
 ## Logistic regression for physical health
 
 ```{r}
@@ -1090,8 +1092,6 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 fit <- glm(CHOLDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
 
 summary(fit)
-
-summ(fit, model.info = F)
 ```
 
 
@@ -1129,8 +1129,6 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 fit <- glm(DIABDX_M18 ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
 
 summary(fit)
-
-summ(fit, model.info = F)
 ```
 
 ```{r}
@@ -1313,6 +1311,9 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) +
   theme_minimal()
 ```
 
+To sum up all the results we can see above, even if the results are based on a different section of the population (because as we saw above cigarettes and electronic smoking devices are distributed in different ways), the results are pretty similar.
+With respect to cigarettes, the difference between smokers and non smokers are more accentuated in some cases, but most times are a little bit less present. That's because the data in our possession about e-smokers are more distributed around younger ages, in which usually people tends to stay better regardless. 
+Even with this specification, the variable is still very significant in most of our models, signalling that even if you smoke electronic cigarettes, not smoking at all tends to be increase the probabilities of staying better.
 
 ## Multilogit regression for Mental Health
 
@@ -1342,7 +1343,7 @@ matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2)
 title("Mental Health by Age")  
 grid()
-legend("left",legend = unique(filter_df$MNHLTH31), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+legend("left",legend = sort(unique(filter_df$MNHLTH31)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
 
 ```{r}
@@ -1584,46 +1585,7 @@ legend("topright",
 mtext("General Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
-## Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses
-
-```{r}
-new_df <- small_df %>% select(ASTHDX, SDENICPROD, SEX, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
-
-new_df <- new_df %>%  filter(AGEGROUP == "18-24")
-
-new_df$ASTHDX <- relevel(new_df$ASTHDX, ref = "1 YES")
-new_df$SDENICPROD <- relevel(new_df$SDENICPROD, ref = "2 NO")
-new_df$SEX <- relevel(new_df$SEX, ref = "1 MALE")
-
-
-fit <- glm(ASTHDX ~ SDENICPROD * SEX, data = new_df, family = "binomial")
-
-summary(fit)
-
-summ(fit, model.info = F)
-```
-
-```{r}
-new_df <- small_df %>% select(ADGENH42, SDENICPROD, SEX, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
-
-new_df <- new_df %>%  filter(AGEGROUP == "18-24")
-
-new_df$ADGENH42 <- relevel(new_df$ADGENH42, ref = "5 POOR")
-new_df$SDENICPROD <- relevel(new_df$SDENICPROD, ref = "2 NO")
-new_df$SEX <- relevel(new_df$SEX, ref = "1 MALE")
-
-
-fit <- glm(ADGENH42 ~ SDENICPROD * SEX, data = new_df, family = "binomial")
-
-summary(fit)
-
-unique(small_df$ADGENH42)
-
-summ(fit, model.info = F)
-```
-
-
-
+Also in this case the results for Perceived Mental Health and General Health are quite similar to those previously discussed. A difference we can point out is a general improvement in perceived mental health for E-Smokers (compared to cigarette smokers) and a general worsening in general health for E-Smokers. One interpretation of this could be that some people are switching to E-smoking because of poor health, and what we are seeing is due to external factors or previous habits. Unfortunately, we do not have access to this type of data in this dataset, so we will limit our discussion to what we are observing.
 
 
 

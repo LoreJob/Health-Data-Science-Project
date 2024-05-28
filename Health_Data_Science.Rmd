@@ -38,6 +38,9 @@ knitr::opts_chunk$set(echo = TRUE)
   library(haven)
   library(survey)
   library(remotes)
+  library(jtools)
+  library(VGAM)
+  library(boot)
 #  library(MEPS)
 ```
 
@@ -1396,5 +1399,1382 @@ all_tables %>% mutate(age = factor(age)) %>%
 Summary:
 
 the general health of e-nicotine products users is the not much lower than that of non users. However there is a bigger gap in the mental health of the two groups: in the data we see that non users tend to have higher values of good mental health
+
+# Smoking Cigarettes
+
+Now we started to fit some models for Smoking and E-Smoking. We decided to analyse the two variables in distinct ways because...
+We decide to start with the smoking predictor. We want to keep only *AGE*, *SEX* and *AGEGROUP* as other predictors.
+
+## Logistic regression for physical health
+
+```{r}
+values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPPLICABLE")
+small_df = small_df %>% mutate(AGEGROUP = age_group)
+```
+
+
+### Arthritis 
+
+```{r}
+filter_df <- small_df %>% select(ARTHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$ARTHDX <- relevel(filter_df$ARTHDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(ARTHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(ARTHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of ARTHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+
+```
+
+All our variables are significant.
+Arthritis is characterized by a positive correlation with smoking (more pronounced in women), sex and age.
+
+### Diabetes
+```{r}
+filter_df <- small_df %>% select(DIABDX_M18, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$DIABDX_M18 <- relevel(filter_df$DIABDX_M18, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(DIABDX_M18 ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(DIABDX_M18 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of DIABDX_M18 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.6))
+
+```
+
+In this case, looking at smoking in general is not significant, but if we control for sex, in the female there is definitely a correlation.
+Diabetes is characterized by a positive correlation with smoking (significant in women) and with age, and a negative one with being female.
+
+### Emphysema
+```{r}
+filter_df <- small_df %>% select(EMPHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$EMPHDX <- relevel(filter_df$EMPHDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(EMPHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(EMPHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of EMPHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+All our variables are significant.
+Emphysema is characterized by a positive correlation with smoking and age (more pronounced in smokers), and a negative one for being female.
+
+### Stroke
+
+```{r}
+filter_df <- small_df %>% select(STRKDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$STRKDX <- relevel(filter_df$STRKDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(STRKDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(STRKDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of STRKDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.4))
+
+```
+
+All our variables are significant, except for the interaction between smoking and sex.
+Stroke is characterized by a positive correlation with smoking and age, and a negative one for being female.
+
+### Lung Cancer 
+```{r}
+filter_df <- small_df %>% select(CALUNG, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(CALUNG ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithCancer = sum(CALUNG == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithCancer/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  ylim(c(0, 0.35))
+
+```
+
+In this case, both age and interaction between smoking and sex seem to be not significant.
+However we can observe that Lung Cancer is characterized by a positive correlation with both smoking and age, and this correlations are more pronounced for men.
+
+### Asthma
+
+```{r}
+filter_df <- small_df %>% select(ASTHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == c("18-24"))
+
+filter_df$ASTHDX <- relevel(filter_df$ASTHDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(ASTHDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, ADSMOK42) %>% summarise(WithAsthma = sum(ASTHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithAsthma/tot) 
+
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of ASTHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Also in this case, looking at smoking in general is not significant, but if we look at the interaction between smoking and sex, there is definitely a correlation.
+Asthma is quite particular, because is the only one that is characterized by a negative correlation with age. Also in this case we have a positive correlation with smoking (significant in female) and with sex.
+
+### High Cholesterol
+```{r}
+filter_df <- small_df %>% select(CHOLDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CHOLDX <- relevel(filter_df$CHOLDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHOLDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, ADSMOK42) %>% summarise(WithChol = sum(CHOLDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithChol/tot) 
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CHOLDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+Also in this case, looking at smoking in general is not significant, as we see in the interaction with sex, in the female there is definitely a correlation.
+High Cholesterol is characterized by a positive correlation with smoking (significant in women) and with age, and a negative one with being female.
+
+
+### Chronic Bronchitis
+```{r}
+filter_df <- small_df %>% select(CHBRON31, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CHBRON31 <- relevel(filter_df$CHBRON31, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHBRON31 ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, ADSMOK42) %>% summarise(WithBronch = sum(CHBRON31 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithBronch/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CHBRON31 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+In this case, both age and interaction between smoking and sex seem to be not so significant (not at all in general and really low for the interaction).
+However we can observe that Chronic Bronchitis is characterized by a positive correlation with both age and smoking (more pronunced a little bit more pronunced for female).
+
+### High Blood Pressure
+```{r}
+filter_df <- small_df %>% select(HIBPDX, ADSMOK42, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$HIBPDX <- relevel(filter_df$HIBPDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(HIBPDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, ADSMOK42) %>% summarise(WithPress = sum(HIBPDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of HIBPDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+In this case, all our variables are significant.
+High Blood Pressure is characterized by a positive correlation with smoking and with age, and a negative one with being female.
+
+As we can say we obtained a lot of different results, both negative and positive,
+but we can see that for some models there is a direct correlation with *AGE*. Also some plots are quite similar (like the one for Cholesterol and Blood pressure) So there could be some connection between those disease.
+To prove this we can try if some physical diseases have some of connection.
+
+#### Trying to see if Cholesterol and Blood pressure are correlated
+
+```{r}
+filter_df <- small_df %>% select(CHOLDX, HIBPDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$HIBPDX <- relevel(filter_df$HIBPDX, ref = "2 NO")
+filter_df$CHOLDX <- relevel(filter_df$CHOLDX, ref = "2 NO")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHOLDX ~ HIBPDX * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, HIBPDX) %>% summarise(WithChol = sum(CHOLDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithChol/tot) 
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), HIBPDX = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = HIBPDX)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of High Cholesterol by Age, High Blood Pressure, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+As we can see, there is definitely a correlation.
+
+## Multilogit regression for Mental Health
+
+Now to evaluate the mental health status we need to change the type of the regression. In the first part we used the Logistic Regression, but for this part we need to use the Multinomial Logistic Regression. MLR is a classification method that modify logistic regression to multiclass problems, i.e. with more than two possible discrete outcomes (I promise, is just a case that is very similar to the Wikipedia description). 
+
+### Perceived Mental Health Status 
+
+```{r}
+filter_df <-small_df %>% select(MNHLTH31, ADSMOK42, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "1 EXCELLENT")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31)
+```
+
+
+```{r}
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
+  title("Mental Health by Age") + 
+  grid()
+legend("left",legend = sort(unique(filter_df$MNHLTH31)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+```
+
+Here we can see the general distribution of the Perceived Mental Health Status for every age. As we see, the majority of the people are distributed between the 3 best cases, with the "very good" one being the most frequent.
+
+```{r}
+null <-  vglm(MNHLTH31 ~ 1,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+
+pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
+```
+
+Then we fitted the model with also SEX
+
+```{r}
+fit <- vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+
+Oh no! There is a problem in our regression, what is that? The Hauck-Donner effect?
+It reminds me a name of a music instrument brand...never mind.
+
+The Hauck-Donner effect is a problem that can occur if we use small data-frame, indicates that
+the significance of our model can be false. But how can we solve it? Don't worry, is very simple.
+
+We bootstrapped the original data-frame for 100 times (better more but our pc are not so
+powerful).
+
+```{r}
+data <- filter_df
+formula <- MNHLTH31 ~ ADSMOK42 + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+Fortunately the bootstrap confirm the robustness of our model. 
+
+#### Difference between smokers and non smokers
+
+Then we compared the smokers and non smokers filtering the dataset for this variable and fitting 2 models.
+
+```{r}
+smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
+n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
+```
+
+
+```{r}
+# For smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST") 
+grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.69))
+mtext("Perceived Mental Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+
+```{r}
+# For non smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) # check that they sum to 1
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.14))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.37))
+mtext("Perceived Mental Health Status for Non-Smokers", outer = TRUE, cex = 1.5, line = -3)
+```
+
+From this 2 groups of plots we see that non-smokers tend to have better Perceived Mental Health. The majority of the non-smoking population perceives their mental health as "very good," with the best category ("excellent," shown in black) being the second most prevalent up to age 56. In contrast, among smokers, the most common perception is "good," followed by "very good." "Excellent" ranks only third.
+
+## General Health Smoking
+
+Here, we have performed the same analysis for the "General Health" variable.
+
+```{r}
+filter_df <-small_df %>% select(ADGENH42, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$ADGENH42 <- relevel(filter_df$ADGENH42, ref = "1 EXCELLENT")
+filter_df$ADSMOK42 <- relevel(filter_df$ADSMOK42, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- vglm(ADGENH42 ~ AGELAST , data = filter_df, family = multinomial)
+
+# summary(fit)
+
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), ADSMOK42 = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2) 
+title("General Health by Age")  
+grid()
+legend("bottomleft",legend = sort(unique(filter_df$ADGENH42)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
+```
+
+The General Health plot is quite different from the previous one, as we see that the effect of age is stronger. In this case we see a strong decreasing in the best cases (Very good and Excellent) and the increase of the others.
+
+```{r}
+confint(fit)
+
+null = vglm(ADGENH42 ~ 1, family = multinomial, data  = filter_df)
+
+print(pseudo_R2 <- 1 - deviance(fit) / deviance(null))
+
+anova(fit, test="LRT")
+```
+
+Than we added the sex variable also in this case and we did some plots
+
+```{r}
+filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
+fit <- vglm(ADGENH42 ~ ADSMOK42 + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+
+```{r}
+data <- filter_df
+formula <- ADGENH42 ~ ADSMOK42 + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+Also in this case we checked if our model was robust before splitting in smokers and non-smokers, and it was.
+
+```{r}
+smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
+n_smk_df = filter_df %>% filter(ADSMOK42 == "2 NO")
+```
+
+```{r}
+# For smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+  grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+  grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+```{r}
+# For not smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+  grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.4))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+  grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for NOT Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+Also in this case we see that non-smokers tend to have better General Health. Non smokers are starting from higher General Health categories, and are inverting with worst ones later in the years respect to smokers. We can observe that as years pass, the most of the smoker are distributing between the "Good" and "Fair" categories, with also the "Poor" one surpassing the "Excellent" one. For non smokers this inversion never happens, and later in the years, the most of the people are still distributing between the "Very Good" and "Good" categories.
+
+# E-Smoking
+
+Form now on we will repeat the same steps for the E-smoking
+
+## Logistic regression for physical health
+
+```{r}
+values_to_remove <- c("-15 CANNOT BE COMPUTED", "-8 DK", "-7 REFUSED", "-1 INAPPLICABLE")
+```
+
+
+### Stroke  
+
+```{r}
+filter_df <- small_df %>% select(STRKDX , SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$STRKDX  <- relevel(filter_df$STRKDX , ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- glm(STRKDX  ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, SDENICPROD) %>% summarise(WithStroke = sum(STRKDX  == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithStroke/tot)
+
+
+# Creating the prediction data frame
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of STRKDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+
+```
+
+### Asthma
+
+```{r}
+filter_df <- small_df %>% select(ASTHDX, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == c("18-24"))
+
+filter_df$ASTHDX <- relevel(filter_df$ASTHDX, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(ASTHDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, SDENICPROD) %>% summarise(WithAsthma = sum(ASTHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithAsthma/tot) 
+
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of ASTHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+
+### Arthritis
+
+```{r}
+filter_df <- small_df %>% select(ARTHDX , SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == c("18-24"))
+
+filter_df$ARTHDX  <- relevel(filter_df$ARTHDX , ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(ARTHDX  ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGEGROUP,AGELAST, SEX, SDENICPROD) %>% summarise(WithAsthma = sum(ARTHDX  == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithAsthma/tot) 
+
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 95))
+
+# Predicting values using the model
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+
+# Plotting the results
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of ARTHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+### High Cholesterol
+```{r}
+filter_df <- small_df %>% select(CHOLDX, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CHOLDX <- relevel(filter_df$CHOLDX, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHOLDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithChol = sum(CHOLDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithChol/tot) 
+
+prediction <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+prediction$Yval <- predict(fit, newdata = prediction, type = "response")
+
+ggplot(prediction, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CHOLDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+### Diabetes
+```{r}
+filter_df <- small_df %>% select(DIABDX_M18 , SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$DIABDX_M18 <- relevel(filter_df$DIABDX_M18 , ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(DIABDX_M18 ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithBronch = sum(DIABDX_M18 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithBronch/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of DIABDX_M18 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+
+
+### High Blood Pressure
+```{r}
+filter_df <- small_df %>% select(HIBPDX, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$HIBPDX <- relevel(filter_df$HIBPDX, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(HIBPDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(HIBPDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of HIBPDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+### Lung cancer
+
+```{r}
+filter_df <- small_df %>% select(CALUNG, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CALUNG <- relevel(filter_df$CALUNG, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CALUNG ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(CALUNG == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CALUNG by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+### Bronchitis
+
+```{r}
+filter_df <- small_df %>% select(CHBRON31, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$CHBRON31 <- relevel(filter_df$CHBRON31, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(CHBRON31 ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(CHBRON31 == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of CHBRON31 by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+
+### Emphysema
+
+```{r}
+filter_df <- small_df %>% select(EMPHDX, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$EMPHDX <- relevel(filter_df$EMPHDX, ref = "2 NO")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+
+fit <- glm(EMPHDX ~ SDENICPROD * SEX + AGELAST, data = filter_df, family = "binomial")
+
+summary(fit)
+```
+
+```{r}
+data_point <- filter_df %>%  group_by(AGELAST, SEX, SDENICPROD) %>% summarise(WithPress = sum(EMPHDX == "1 YES"), tot = n()) %>%
+  mutate(frequency = WithPress/tot) 
+
+# Creating the prediction data frame
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+# Predicting values using the model
+df_pred$Yval <- predict(fit, newdata = df_pred, type = "response")
+
+
+# Plotting the results
+ggplot(df_pred, aes(x = AGELAST, y = Yval, col = SDENICPROD)) + 
+  geom_line() +
+  geom_point(data = data_point, aes(y = frequency)) + 
+  facet_wrap(~SEX) +
+  labs(title = "Predicted Probability of EMPHDX by Age, Smoking Status, and Sex",
+       x = "Age (AGELAST)",
+       y = "Predicted Probability (Yval)") +
+  theme_minimal()
+```
+
+To sum up all the results we can see above, even if the results are based on a different section of the population (because as we saw above cigarettes and electronic smoking devices are distributed in different ways), the results are pretty similar.
+With respect to cigarettes, the difference between smokers and non smokers are more accentuated in some cases, but most times are a little bit less present. That's because the data in our possession about e-smokers are more distributed around younger ages, in which usually people tends to stay better regardless. 
+Even with this specification, the variable is still very significant in most of our models, signalling that even if you smoke electronic cigarettes, not smoking at all tends to be increase the probabilities of staying better.
+
+## Multilogit regression for Mental Health
+
+### Perceived Mental Health Status 
+
+```{r}
+filter_df <-small_df %>% select(MNHLTH31, SDENICPROD, SEX, AGELAST) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$MNHLTH31 <- relevel(filter_df$MNHLTH31, ref = "1 EXCELLENT")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+```
+
+
+```{r}
+filter_df$MNHLTH31 = ordered(filter_df$MNHLTH31)
+
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+
+matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2)
+title("Mental Health by Age")  
+grid()
+legend("left",legend = sort(unique(filter_df$MNHLTH31)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+```
+
+```{r}
+null <-  vglm(MNHLTH31 ~ 1,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+
+pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
+```
+
+```{r}
+fit <- vglm(MNHLTH31 ~ SDENICPROD + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+```{r}
+data <- filter_df
+formula <- MNHLTH31  ~ SDENICPROD  + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+#### Difference between smokers and non smokers
+
+```{r}
+smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
+n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
+```
+
+
+```{r}
+# For smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.5))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST") 
+grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.15))
+mtext("Perceived Mental Health Status for E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+
+```{r}
+# For non smokers
+fit <- vglm(MNHLTH31 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(n_smk_df$AGELAST), max(n_smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) # check that they sum to 1
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.14))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST")
+grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.37))
+mtext("Perceived Mental Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line = -3)
+```
+
+
+
+## General Health E - Smoking
+```{r}
+filter_df <-small_df %>% select(ADGENH42, SDENICPROD, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
+
+# filter_df <- filter_df %>% filter(AGEGROUP == "65+")
+
+filter_df$ADGENH42 <- relevel(filter_df$ADGENH42, ref = "1 EXCELLENT")
+filter_df$SDENICPROD <- relevel(filter_df$SDENICPROD, ref = "2 NO")
+filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
+
+fit <- vglm(ADGENH42 ~ AGELAST , data = filter_df, family = multinomial)
+
+# summary(fit)
+
+df_pred <- expand.grid(SEX = c("1 MALE", "2 FEMALE"), SDENICPROD = c("1 YES", "2 NO"), AGELAST = seq(18, 80))
+
+
+matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
+        ylab = "Predicted Probability", xlab = "Age", lwd = 2)
+  title("General Health by Age") 
+  grid()
+legend("bottomleft",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
+```
+
+
+
+
+```{r}
+confint(fit)
+
+null = vglm(ADGENH42 ~ 1, family = multinomial, data  = filter_df)
+
+print(pseudo_R2 <- 1 - deviance(fit) / deviance(null))
+
+anova(fit, test="LRT")
+```
+
+```{r}
+filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
+
+fit <- vglm(ADGENH42 ~ SDENICPROD + SEX + AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = filter_df)
+summary(fit)
+```
+```{r}
+data <- filter_df
+formula <- ADGENH42 ~ SDENICPROD + SEX + AGELAST
+
+fit_model <- function(data, indices) {
+  boot_data <- data[indices, ]
+  model <- vglm(formula,
+             family = cumulative(parallel = TRUE),
+             data = boot_data)
+  return(coef(model))
+}
+
+set.seed(123)
+bootstrap_results <- boot(data = data, statistic = fit_model, R = 100)
+
+bootstrap_results
+
+boot.ci(bootstrap_results, type = "basic")
+```
+
+
+
+### Difference btween smokers and non smokers
+
+```{r}
+smk_df = filter_df %>% filter(SDENICPROD == "1 YES")
+n_smk_df = filter_df %>% filter(SDENICPROD == "2 NO")
+```
+
+```{r}
+# For smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
+  grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.25))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST") 
+  grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+```{r}
+# For not smokers
+fit <- vglm(ADGENH42 ~ AGELAST,
+             family = cumulative(parallel = TRUE),
+             data = n_smk_df)
+
+df_pred = data.frame(AGELAST = seq(min(smk_df$AGELAST), max(smk_df$AGELAST), by = 1))
+preds = predict(fit, df_pred) 
+cum_probabilities = t(apply(preds,1,plogis))
+
+par(mfrow = c(1,2))
+matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
+        ylab = "Cumulative probabilites", xlab = "AGELAST")+
+  grid()
+legend("bottomleft", 
+       legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.3))
+category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
+preds = predict(fit, df_pred, type = "response") # check that they are equivalent
+matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
+        ylab = "Category probabilites", xlab = "AGELAST") 
+  grid()
+legend("topright",
+       legend = sprintf("Pr[Y = %g]", 1:5),
+       col = c(1,2,3,4,5), lty = 1, cex = 0.6, xpd = TRUE,
+       inset = c(0, 0.08))
+mtext("General Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line = -3.5)
+```
+
+Also in this case the results for Perceived Mental Health and General Health are quite similar to those previously discussed. A difference we can point out is a general improvement in perceived mental health for E-Smokers (compared to cigarette smokers) and a general worsening in general health for E-Smokers. One interpretation of this could be that some people are switching to E-smoking because of poor health, and what we are seeing is due to external factors or previous habits. Unfortunately, we do not have access to this type of data in this dataset, so we will limit our discussion to what we are observing.
 
 
