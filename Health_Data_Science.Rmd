@@ -43,12 +43,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-**The central question we want to answer is: what are the negative health effects associated with smoking?**
+Problem Statement 
+The objective of this study is to investigate the negative health effects associated with smoking, including both physical and mental health outcomes. Given the widespread prevalence of smoking and the rising use of electronic nicotine products, it is crucial to understand the extent to which these habits impact overall health. Our analysis will focus on identifying the associations between smoking and various health-related issues, as well as exploring the relationship between smoking habits and mental health indicators. Additionally, we will compare these findings with the health effects associated with the use of electronic nicotine products.
 
+
+The central question we want to answer is: what are the negative health effects associated with smoking?
 We will look at the association between smoking and health related issues. We 
 will also look at some mental health indicators and how they relate to smoking
 habits. We will also make an interesting comparison with usage of electronic
 nicotine products.
+
+Abstract
+The negative health effects of smoking have been well-documented, yet the comprehensive impact on both physical and mental health continues to be a critical area of study. This research aims to analyze the associations between smoking and health-related issues using data from the 2021 Medical Expenditure Panel Survey Household Component, which surveyed 15,000 households in the United States. By examining physical health outcomes and mental health indicators, this study seeks to provide a detailed understanding of how smoking affects individuals. Furthermore, we will compare these effects with those associated with the use of electronic nicotine products, offering insights into the potential risks of these increasingly popular alternatives. Our findings aim to inform public health strategies and contribute to ongoing efforts to mitigate the health risks associated with smoking and electronic nicotine product usage.
 
 The dataset we are working with is the Medical Expenditure Panel Survey Household
 component of 2021. It's a survey conducted on 15000 households in the United States

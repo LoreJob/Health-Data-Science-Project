@@ -259,8 +259,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   labs(title = "Predicted Probability of ARTHDX by Age, Smoking Status, and Sex",
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
-  theme_minimal()+
-  ylim(c(0, 0.35))
+  theme_minimal()
 
 ```
 
@@ -303,7 +302,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()+
-  ylim(c(0, 0.35))
+  ylim(c(0, 0.6))
 
 ```
 
@@ -390,7 +389,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
        x = "Age (AGELAST)",
        y = "Predicted Probability (Yval)") +
   theme_minimal()+
-  ylim(c(0, 0.35))
+  ylim(c(0, 0.4))
 
 ```
 
@@ -682,8 +681,10 @@ matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2) +
   title("Mental Health by Age") + 
   grid()
-legend("left",legend = unique(filter_df$MNHLTH31), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
+legend("left",legend = sort(unique(filter_df$MNHLTH31)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6)
 ```
+
+Here we can see the general distribution of the Perceived Mental Health Status for every age. As we see, the majority of the people are distributed between the 3 best cases, with the "very good" one being the most frequent.
 
 ```{r}
 null <-  vglm(MNHLTH31 ~ 1,
@@ -692,6 +693,8 @@ null <-  vglm(MNHLTH31 ~ 1,
 
 pchisq(deviance(null)-deviance(fit), df <- df.residual(null)-df.residual(fit), lower.tail=FALSE)
 ```
+
+Then we fitted the model with also SEX
 
 ```{r}
 fit <- vglm(MNHLTH31 ~ ADSMOK42 + SEX + AGELAST,
@@ -729,9 +732,11 @@ bootstrap_results
 boot.ci(bootstrap_results, type = "basic")
 ```
 
-Fortunatly the boostrap confirm the robustness of our model. 
+Fortunately the bootstrap confirm the robustness of our model. 
 
 #### Difference between smokers and non smokers
+
+Then we compared the smokers and non smokers filtering the dataset for this variable and fitting 2 models.
 
 ```{r}
 smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
@@ -800,9 +805,12 @@ legend("topright",
 mtext("Perceived Mental Health Status for Non-Smokers", outer = TRUE, cex = 1.5, line = -3)
 ```
 
-
+From this 2 groups of plots we see that non-smokers tend to have better Perceived Mental Health. The majority of the non-smoking population perceives their mental health as "very good," with the best category ("excellent," shown in black) being the second most prevalent up to age 56. In contrast, among smokers, the most common perception is "good," followed by "very good." "Excellent" ranks only third.
 
 ## General Health Smoking
+
+Here, we have performed the same analysis for the "General Health" variable.
+
 ```{r}
 filter_df <-small_df %>% select(ADGENH42, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -823,8 +831,10 @@ matplot(df_pred$AGELAST, predict(fit, df_pred,type = "response"), type = "l",
         ylab = "Predicted Probability", xlab = "Age", lwd = 2) 
 title("General Health by Age")  
 grid()
-legend("bottomleft",legend = unique(filter_df$ADGENH42), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
+legend("bottomleft",legend = sort(unique(filter_df$ADGENH42)), col = 1:5, lty = 1:5, lwd = 2, cex = 0.6, inset = c(0, 0.25))
 ```
+
+The General Health plot is quite different from the previous one, as we see that the effect of age is stronger. In this case we see a strong decreasing in the best cases (Very good and Excellent) and the increase of the others.
 
 ```{r}
 confint(fit)
@@ -835,6 +845,9 @@ print(pseudo_R2 <- 1 - deviance(fit) / deviance(null))
 
 anova(fit, test="LRT")
 ```
+
+Than we added the sex variable also in this case and we did some plots
+
 ```{r}
 filter_df$ADGENH42 = ordered(filter_df$ADGENH42)
 fit <- vglm(ADGENH42 ~ ADSMOK42 + SEX + AGELAST,
@@ -842,7 +855,6 @@ fit <- vglm(ADGENH42 ~ ADSMOK42 + SEX + AGELAST,
              data = filter_df)
 summary(fit)
 ```
-
 
 ```{r}
 data <- filter_df
@@ -864,6 +876,7 @@ bootstrap_results
 boot.ci(bootstrap_results, type = "basic")
 ```
 
+Also in this case we checked if our model was robust before splitting in smokers and non-smokers, and it was.
 
 ```{r}
 smk_df = filter_df %>% filter(ADSMOK42 == "1 YES")
@@ -882,7 +895,7 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST")+
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
   grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
@@ -891,7 +904,7 @@ legend("bottomleft",
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
+        ylab = "Category probabilites", xlab = "AGELAST")
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
@@ -912,7 +925,7 @@ cum_probabilities = t(apply(preds,1,plogis))
 
 par(mfrow = c(1,2))
 matplot(df_pred$AGELAST,cum_probabilities, lty = 1, type = "l", lwd = 2, 
-        ylab = "Cumulative probabilites", xlab = "AGELAST")+
+        ylab = "Cumulative probabilites", xlab = "AGELAST")
   grid()
 legend("bottomleft", 
        legend = gsub("link", "", colnames(cum_probabilities)), # remove link from labels
@@ -921,7 +934,7 @@ legend("bottomleft",
 category_probabilities = t(apply(cbind(0,cum_probabilities,1),1,diff))
 preds = predict(fit, df_pred, type = "response") # check that they are equivalent
 matplot(df_pred$AGELAST, preds, lty = 1, type = "l", lwd = 2,
-        ylab = "Category probabilites", xlab = "AGELAST") +
+        ylab = "Category probabilites", xlab = "AGELAST")
   grid()
 legend("topright",
        legend = sprintf("Pr[Y = %g]", 1:5),
@@ -930,7 +943,7 @@ legend("topright",
 mtext("General Health Status for NOT Smokers", outer = TRUE, cex = 1.5, line = -3.5)
 ```
 
-
+Also in this case we see that non-smokers tend to have better General Health. Non smokers are starting from higher General Health categories, and are inverting with worst ones later in the years respect to smokers. We can observe that as years pass, the most of the smoker are distributing between the "Good" and "Fair" categories, with also the "Poor" one surpassing the "Excellent" one. For non smokers this inversion never happens, and later in the years, the most of the people are still distributing between the "Very Good" and "Good" categories.
 
 # E-Smoking
 
