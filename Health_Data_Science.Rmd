@@ -43,32 +43,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1 - First Paragraph
 
-**For the project i offer to consider the following topic: 'Young Adults Aged 18-24 Who Had Ever Used an Electronic Nicotine have poor general health and more likely to have asthma diagnoses'**
-
-Comment by Giuseppe:
-
-(I think this topic is too specific and the dataset will not allow us to explore it deeply.
-We would need to have information on older persons that have asthma and their smoking habits when they were young)
-
-I propose we chose a more general topic:
-
-<hr>
-
-**The central question we want to answer is: what are the negative effects of smoking?**
+**The central question we want to answer is: what are the negative health effects associated with smoking?**
 
 We will look at the association between smoking and health related issues. We 
 will also look at some mental health indicators and how they relate to smoking
-habits.
+habits. We will also make an interesting comparison with usage of electronic
+nicotine products.
 
-<hr>
-
+The dataset we are working with is the Medical Expenditure Panel Survey Household
+component of 2021. It's a survey conducted on 15000 households in the United States
+of America.
 
 *Here is info about characteristics:* <https://meps.ahrq.gov/data_files/publications/st554/stat554.shtml>
 
 *Here is questionary report:* <https://meps.ahrq.gov/survey_comp/hc_survey/paper_quest/2021/2021_SHE_SAQ.pdf>
 
 *Codebook:* <https://meps.ahrq.gov/data_stats/download_data/pufs/h233/h233cb.pdf>
-
 
 ```{r}
 # the dataset is in the github repo, we don't need to download it every time
@@ -80,109 +70,22 @@ Our main explanatory variables:
 
 ADSMOK42: currently smokes
 
-ADNSMK42 - If ADSMOK42 = 1, doctor advised you to quit smoking
-
 SDENICPROD: used electronic nicotine product
 
-ADDPRS42: felt down/depressed
+The other variables we selected are:
 
-ADGENH42: health in general
+ADNSMK42 - If ADSMOK42 = 1, doctor advised you to quit smoking
 
-ADENGY42: had a lot of energy
+Other variables we selected can be grouped as follows:
 
-ADHOPE42: how often felt hopeless
+Demographic variables: AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31
 
-ADNERV42: how often felt nervous
+Mental health: ADDPRS42, ADHOPE42, ADNERV42, ADPCFL42, ADSAD42, MNHLTH31
 
-ADPCFL42: felt calm/peaceful
+General health: ADGENH42, ADENGY42, RTHLTH31, WLKLIM53
 
-ADSAD42: how often felt sad
+Disease Diagnosis: ASTHDX, ARTHDX, CALUNG, CHOLDX, CHBRON31, DIABDX_M18, EMPHDX, HIBPDX, STRKDX
 
-AGELAST: person age
-
-ASTHDX: asthma diagnosis
-
-ARTHDX:  had ever been diagnosed with arthritis
-
-CALUNG: lung cancer diagnosed
-
-CHOLDX: high cholesterol diagnosis
-
-CHBRON31: if the person (aged 18 or older) has had chronic bronchitis in the last 12 months
-
-DIABDX_M18: diabetes diagnosis
-
-EMPHDX: Emphysema diagnosis
-
-EMPST31: employment status
-
-FAMINC21: family income
-
-HIBPDX: whether the person had ever been diagnosed as having high blood pressure (other than during pregnancy)
-
-MNHLTH31: perceived mental health status
-
-MARRY21X: marital status
-
-TTLP21X: person total income
-
-OHRTDX: asked if the person had ever been diagnosed with any other kind of heart disease or condition
-
-OHRTTYPE: specify other heart diseases or conditions
-
-RTHLTH31: perceived health status
-
-REGION21:indicate the Census region for the RU. (A Reporting Unit (RU) is a person or group of persons in the sampled DU who are related by blood, marriage, adoption, or other family association. Each RU was interviewed as a single entity for MEPS.)
-
-WLKLIM53: limitation in physical functioning
-
-SDCOMPAN: feel lack of companionship
-
-STRKDX: asked if the person (aged 18 or older) had ever been diagnosed as having had a stroke or transient ischemic attack 
-
-SDLEFTOUT: feel left out
-
-SDLIFE: satisfied with life
-
-SDHOME - How satisfied with house/apartment where person lives
-
-SDISOL - How often feel isolated from others
-
-SEX: gender
-
-SDMEDCARE - Rate neighborhood availability of places to get medical care
-
-SDHLTHFOOD - Rate neighborhood availability of places to buy healthy food
-
-SDHMDEPR - When under 18 years of age, lived with someone who was depressed, mentally ill, or suicidal
-
-SDHMALC - When under 18 years of age, lived with a problem drinker or alcoholic
-
-SDHMDRG - When under 18 years of age, lived with someone who used illegal street drugs or abused prescription medication
-
-SDHMDIV - Parents separated or divorced
-
-SDHMBEAT - How often did parents or adults in home slap, hit, kick, punch, or beat each other up
-
-SDHURTCHLD - How often did parents or adults in home hit, beat, kick, or physically hurt person
-
-FTSTU21X: student status
-
-RACEV2X:race
-
-
-## 46 variables 
-#Variables of interest: ADSMOK42, ADNSMK42, SDENICPROD
-
-#Demograpfical variables: AGELAST, REGION21, SEX, RACEV2X, MARRY21X, FTSTU21X, TTLP21X, FAMINC21, EMPST31
-
-#Mental health: ADDPRS42, ADHOPE42, ADNERV42, ADPCFL42, ADSAD42, MNHLTH31
-
-#General health: ADGENH42, ADENGY42, RTHLTH31, WLKLIM53
-
-#Health deseases: ASTHDX, ARTHDX, CALUNG, CHOLDX, CHBRON31, DIABDX_M18, EMPHDX, HIBPDX, OHRTDX, OHRTTYPE, STRKDX
-
-#The Social Determinants of Health Survey (SDOH) includes questions about the social determinants of health, such as housing, financial well-being, food security, social support, discrimination, and physical and sexual violence.: SDLIFE, SDHOME, SDMEDCARE, SDHLTHFOOD, SDCOMPAN, SDLEFTOUT, SDISOL, SDHMDEPR, SDHMALC, SDHMDRG, SDHMDIV, SDHMBEAT, SDHURTCHLD
 
 ```{r}
 vars_to_keep = c("ADSMOK42","SDENICPROD","ADDPRS42","ADGENH42",
@@ -210,14 +113,12 @@ small_df %>% summary()
 
 # Descriptive statistics
 
-ADSMOK42 is the code about the people that are currently smoking. 
-ADNSMK42 is the code ADSMOK42 = 1, doctor advised you to quit smoking
+## Demographic characteristics
 
-#Descriptive graphs 
+We start by looking at the age distribution of people that took the survey
 
 ```{r}
-
-# I tried to recreate the previous graph but adding more information -Giuseppe
+#smokers by age group
 small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
   summarise(n_smokers = sum(ADSMOK42 == "1 YES"),
             n_non_smokers = sum(ADSMOK42 == "2 NO"),
@@ -231,6 +132,8 @@ small_df %>% select(ADSMOK42, age_group) %>% group_by(age_group) %>%
   labs(title = "Age distribution of smokers and non smokers",
        y = "count", x = "age group", fill = "") + theme_classic()
 
+
+# age distribution of users of electronic cigarettes 
 small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
   summarise(n_smokers = sum(SDENICPROD == "1 YES"),
             n_non_smokers = sum(SDENICPROD == "2 NO"),
@@ -246,9 +149,23 @@ small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
 
 
 ```
-#Working on the demograpthical characteristics 
+Smoking rate increases with age, till the 45-64 age group. They are the most likely
+to smoke. However the last age group, 65 and over is the one with the lowest rate.
+This fact is key to understand the effect of age: as is well known, general health
+decreases sharply with old age, so it will be important in our analysis to always control
+for the confounding effect of age.
 
-#For smokers 
+Looking at electronic nicotine usage, we see a very different picture: in the youngest 
+group there is a really high rate, 41%. Almost one every two young adults uses those
+products. The rate is decreasing with age: every older generation show a large decrease
+from the younger one. The 65+ group, which as we have already said is the one with the
+worst health, sees almost no usage: just over 5%.
+
+The two variables will allow us to make interesting comparisons since the makeup of
+the groups is very different.
+
+ 
+
 ```{r}
 small_df <- small_df %>%
   mutate(
@@ -265,9 +182,8 @@ non_smokers_df <- small_df %>% filter(ADSMOK42 == "2 NO")
 e_smokers_df <-small_df %>% filter(SDENICPROD == "1 YES")
 
 ```
-
-#Demograpthic characteristics 
-##Difference between smokers and non-smokers 
+ 
+### Difference between smokers and non-smokers 
 
 ```{r}
 
@@ -352,21 +268,29 @@ create_plots_demogr(non_smokers_df, demographic_variables, titles_non_smokers)
 * Mean of total income of family is 85484 , 44% earn 30000+,other family's income distributed gradually in income range
 * 45% are not employed during RD, 53% employed
 
-The distribution through smoker, who smokes because of doctor recommendation 
+
+Did smokers receive a doctor's recommendation to quit? 
 ```{r}
 ggplot(smokers_df, aes(x = ADNSMK42)) +
   geom_bar(fill = "skyblue") +
   labs(title = "Distribution of Smokers by Doctor's Recommendation", x = "Doctor's Recommendation", y = "Frequency") + theme_classic()
 ```
-*The 38% of currently smokers smokes because of doctor advise to quit smoke*
+*38% of current smokers still smokes after doctor's advice to quit smoke*
 
-The distribution of e-smokers in full data and through smokers
+Smokers that also make use of electronic nicotine products
 ```{r}
 ggplot(smokers_df, aes(x = SDENICPROD == "1 YES")) +
   geom_bar(fill = "lightcoral") +
-  labs(title = "Distribution of e-Smokers through currently smokers", x = "E-smokers No/Yes", y = "Frequency") + theme_classic()
+  labs(title = "Distribution of e-Smokers through current smokers", x = "E-smokers No/Yes", y = "Count") + theme_classic()
 ```
-*Trough currently smokers just 21% are e-sigarets smokers*
+*Current smokers make use of e-cigarettes at only 21% rate*
+
+This is the main reason why we looked at the two explanatory variables separately:
+the group that uses both is really small with only 700 people in a sample of 28,000 people
+
+
+
+## Mental Health Variables
 
 ```{r}
 #mental health
@@ -427,6 +351,9 @@ create_plots_mental_health(e_smokers_df, mental_health_variables, titles_e_smoke
 *Another picture for e-smokers: mostly of them don't have perceived stress and hopefulness, but 24% fill little of time nervous and 15% some of the time. 27% little of the time have psychological fatigue, ~16% have it most of the time. Overall, 14% feel fair, mental health is more than less good or excellent. 
 
 
+
+## General Health Variables
+
 ```{r}
 create_plots_general_health <- function(data, general_health_variables, titles) {
   data <- data %>%
@@ -479,6 +406,8 @@ create_plots_general_health(e_smokers_df, general_health_variables, titles_e_smo
 
 *Little another picture for e-smokers.Their energy level some times lower and distribution on overall health rate is higher tan for smokers and non-smokers. 45% don't have a walking limitations
 
+
+## Diseases Diagnosis
 
 ```{r, eval=TRUE}
 #deseases
@@ -537,105 +466,7 @@ create_plots_health_disease(non_smokers_df, health_disease_variables, titles_non
 
 ```
 
-```{r}
-calculate_and_plot <- function(data, age_column, smoking_column, health_disease_variables, condition_labels) {
-  data_filtered <- data %>% filter(!!sym(age_column) >= 18)
-  total_count <- nrow(data_filtered)
-  result_df <- data.frame(Condition = character(), n_smokers_with_condition = integer(), perc_smokers = numeric(), stringsAsFactors = FALSE)
-
-  for (condition in health_disease_variables) {
-    summary_df <- data_filtered %>%
-      summarise(
-        n_smokers_with_condition = sum(!!sym(smoking_column) == "1 YES" & !!sym(condition) == "1 YES", na.rm = TRUE),
-        total_with_condition = sum(!!sym(condition) == "1 YES", na.rm = TRUE)
-      ) %>%
-      mutate(
-        perc_smokers = 100 * n_smokers_with_condition / total_count,
-        Condition = condition
-      )
-    result_df <- rbind(result_df, summary_df)
-  }
-  
-  result_df$Condition <- factor(result_df$Condition, levels = health_disease_variables, labels = condition_labels)
-  
-  ggplot(result_df, aes(x = Condition, y = perc_smokers, fill = Condition)) +
-    geom_col() +
-    coord_flip() +
-    labs(
-      title = "Percentage of Persons 18 or Older \nWho Report Specific Health Diseases and Continue to Smoke",
-      x = "Heath Diseases",
-      y = "Percentage"
-    ) +
-    theme_classic() +
-    theme(legend.position = "none")
-}
-
-health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "STRKDX")
-
-condition_labels <- c(
-  "Asthma Diagnosis",
-  "Arthritis Diagnosis",
-  "Lung Cancer Diagnosis",
-  "Cholesterol Diagnosis",
-  "Chronic Bronchitis Diagnosis",
-  "Diabetes Diagnosis",
-  "Emphysema Diagnosis",
-  "High Blood Pressure Diagnosis",
-  "Stroke Diagnosis"
-)
-
-calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
-```
-
-```{r}
-calculate_and_plot <- function(data, age_column, smoking_column, health_disease_variables, condition_labels) {
-  data_filtered <- data %>% filter(!!sym(age_column) >= 18)
-  total_count <- nrow(data_filtered)
-  result_df <- data.frame(Condition = character(), n_smokers_with_condition = integer(), perc_smokers = numeric(), stringsAsFactors = FALSE)
-
-  for (condition in health_disease_variables) {
-    summary_df <- data_filtered %>%
-      summarise(
-        n_smokers_with_condition = sum(!!sym(smoking_column) == "2 NO" & !!sym(condition) == "1 YES", na.rm = TRUE),
-        total_with_condition = sum(!!sym(condition) == "1 YES", na.rm = TRUE)
-      ) %>%
-      mutate(
-        perc_smokers = 100 * n_smokers_with_condition / total_count,
-        Condition = condition
-      )
-    result_df <- rbind(result_df, summary_df)
-  }
-  
-  result_df$Condition <- factor(result_df$Condition, levels = health_disease_variables, labels = condition_labels)
-  
-  ggplot(result_df, aes(x = Condition, y = perc_smokers, fill = Condition)) +
-    geom_col() +
-    coord_flip() +
-    labs(
-      title = "Percentage of non-smokers 18 or Older \nWho Report Specific Health Diseases",
-      x = "Health Desiases",
-      y = "Percentage"
-    ) +
-    theme_classic() +
-    theme(legend.position = "none")
-}
-
-health_disease_variables <- c("ASTHDX", "ARTHDX", "CALUNG", "CHOLDX", "CHBRON31", "DIABDX_M18", "EMPHDX", "HIBPDX", "STRKDX")
-
-condition_labels <- c(
-  "Asthma Diagnosis",
-  "Arthritis Diagnosis",
-  "Lung Cancer Diagnosis",
-  "Cholesterol Diagnosis",
-  "Chronic Bronchitis Diagnosis",
-  "Diabetes Diagnosis",
-  "Emphysema Diagnosis",
-  "High Blood Pressure Diagnosis",
-  "Stroke Diagnosis"
-)
-
-calculate_and_plot(small_df, age_column = "AGELAST", smoking_column = "ADSMOK42", health_disease_variables, condition_labels)
-```
+We immediately see that some diseases are very rare, while others are quite common.
 
 ```{r}
 
@@ -650,6 +481,8 @@ condition_labels <- c(
   "High Blood Pressure Diagnosis",
   "Stroke Diagnosis"
 )
+
+
 
 diseases_percentages = small_df %>% filter(AGELAST >= 18) %>%
   select(ADSMOK42, all_of(health_disease_variables)) %>% group_by(ADSMOK42) %>%
@@ -667,23 +500,6 @@ diseases_percentages = small_df %>% filter(AGELAST >= 18) %>%
   mutate(condition = factor(condition,
                             levels = health_disease_variables,
                             labels = condition_labels))
-
-
-
-diseases_percentages %>% filter(ADSMOK42 != "-1 INAPPLICABLE") %>%
-  mutate(ADSMOK42 = factor(ADSMOK42, levels = c("1 YES","2 NO"), 
-                           labels = c("Smokers","Non-Smokers"))) %>%
-  mutate(ADSMOK42 = relevel(ADSMOK42, "Non-Smokers")) %>%
-  ggplot(aes(x = condition, y = percentage*100, fill = ADSMOK42)) +
-    geom_col(position = position_dodge()) +
-    coord_flip() +
-    labs(
-      title = "Percentage of people 18 or Older Who Report Specific Diseases",
-      x = "",
-      y = "Percentage"
-    ) +
-  theme(legend.title = element_blank())
-
 
 diseases_percentages %>% filter(ADSMOK42 == "1 YES") %>%
   ggplot(aes(x = condition, y = percentage*100, fill = condition)) +
@@ -708,6 +524,22 @@ diseases_percentages %>% filter(ADSMOK42 == "2 NO") %>%
     ) +
     theme_classic() +
     theme(legend.position = "none")
+
+
+diseases_percentages %>% filter(ADSMOK42 != "-1 INAPPLICABLE") %>%
+  mutate(ADSMOK42 = factor(ADSMOK42, levels = c("1 YES","2 NO"), 
+                           labels = c("Smokers","Non-Smokers"))) %>%
+  mutate(ADSMOK42 = relevel(ADSMOK42, "Non-Smokers")) %>%
+  ggplot(aes(x = condition, y = percentage*100, fill = ADSMOK42)) +
+    geom_col(position = position_dodge()) +
+    coord_flip() +
+    labs(
+      title = "Percentage of people 18 or Older Who Report Specific Diseases",
+      x = "",
+      y = "Percentage"
+    ) +
+  theme(legend.title = element_blank())
+
 
 ```
 ```{r}
@@ -749,7 +581,11 @@ diseases_percentages %>% filter(SDENICPROD %in% c("1 YES","2 NO")) %>%
 ```
 
 
-## Contingency Tables with smoking
+# Contingency Tables
+
+## Smoking
+
+### Smoking and Diseases
 
 ```{r, include= FALSE}
 # defining functions to create contingency tables and chisquared tests
@@ -788,10 +624,9 @@ cont_tables_age = function(data, explanatory_var, var_of_interest,
 ```
 
 ```{r}
-## to do:
-# contingency tables and chisquared test for 2 explanatory vars:
-# ADSMOK42 and SDENICPROD
-# and 3 groups of response variables: general health, physical health, mental health
+# contingency tables and chisquared test for
+# ADSMOK42
+
 
 #starting with ADSMOK42 and physical health
 
@@ -885,10 +720,9 @@ ggplot(chisq_df_diseases, aes(x = name, y = value)) +
 
 ```
 
-
+We can also look at the odds ratio.
 
 ```{r}
-#the above graph is equivalent to this one
 
 or_data_all = expand.grid(diseases = health_disease_variables,
                       age = "all",estimate = NA,
@@ -959,7 +793,7 @@ or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
 ```
 
 
-### now we do the contingency tables for mental health variables instead of physical health
+### Smoking and Mental Health
 
 the main issue is that all those variables are multicategorical and not yes or no
 
@@ -1129,13 +963,14 @@ all_tables %>% mutate(age = factor(age)) %>%
 
 ```
 
+In general, we can say that the mental health of non-smokers is better across all
+indicators, and age doesn't seem to have any impact on this. This is expected, because
+old age is not associated with worse mental health as strongly as it is associated with
+physical and general health.
 
 
-
-### Contingency tables for general health and smoking
+### General Health and Smoking
 ```{r}
-# variables about general health
-# "" "" "" "WLKLIM53"
 
 #ADGENH42
 table_multi_cat(small_df, "ADSMOK42", "ADGENH42") %>% as_tibble() %>%
@@ -1171,6 +1006,13 @@ table_multi_cat(small_df, "ADSMOK42", "WLKLIM53") %>% as_tibble() %>%
                               "2 NO" = "Non Smokers"))
 
 ```
+
+We see what we were expecting: the general health of smokers is worse.
+Non-Smokers are healthier, feel healthier and have more energy.
+We also see that among smokers there is a much higher rate of limitation in physical
+functioning. It's hard to look for a direct causality between the two: there are many interactions between different demographic factors. We can explore this deeper, we will
+look at this association in different age groups.
+
 ```{r}
 # odds ratio: smoking and walking limitations in different age groups
 
@@ -1213,11 +1055,15 @@ table_multi_cat_control(small_df, "ADSMOK42", "WLKLIM53",F) %>% as_tibble() %>%
 
 ```
 
-
+This is an interesting graph: young people (under 35) tend to have good general
+health indicators regardless of their smoking habits. This changes as people start to age
+past that threshold. The next two age groups show a larger association between smoking and
+worse health than the oldest group. Is this suggesting that smoking makes the effects of aging start sooner? However once people reach old age, their health gets worse even if they don't smoke.
 
 
 ## Contingency tables for electronic nicotine product
 
+### Diseases Diagnosis
 
 ```{r}
 # diseases association with electronic nicotine product
@@ -1376,7 +1222,7 @@ or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
 
 
 
-### Electronic nicotine product usage and general health indicators
+### General Health 
 
 
 ```{r}
@@ -1422,12 +1268,6 @@ table_multi_cat(small_df, "SDENICPROD", "WLKLIM53") %>% as_tibble() %>%
 
 
 ```{r}
-
-```
-
-
-
-```{r}
 # odds ratio: E-nic usage and walking limitations in different age groups
 
 table_multi_cat_control(small_df, "SDENICPROD", "WLKLIM53",F) %>% as_tibble() %>%
@@ -1454,7 +1294,7 @@ table_multi_cat_control(small_df, "SDENICPROD", "WLKLIM53",F) %>% as_tibble() %>
 
 
 
-### Mental health and electronic nicotine product usage
+### Mental health
 ```{r}
 
 # "MNHLTH31"
@@ -1546,38 +1386,6 @@ all_tables %>% mutate(age = factor(age)) %>%
   theme(strip.text.y = element_text(angle = 0))
 
 ```
-```{r}
-income_mental_health = small_df %>% mutate(income_group = cut(FAMINC21,
-                                    breaks = c(-Inf,36000,90000, Inf),
-                  labels = c("low","medium","high"),
-                  right = FALSE)) %>% select(income_group, ADSMOK42, SDENICPROD,MNHLTH31)
-
-
-table_multi_cat_income = function(data, explanatory_var, var_of_interest,
-                                  group, cond_prob = T){
-  tbl = data %>% filter(income_group == group) %>%
-    select(explanatory_var, var_of_interest,income_group)%>%
-    filter(.data[[explanatory_var]] %in% c("1 YES", "2 NO"),
-           !.data[[var_of_interest]] %in% c("-15 CANNOT BE COMPUTED",
-                                            "-1 INAPPLICABLE",
-                                            "-8 DK","-7 REFUSED"))%>%
-    mutate(across(c(1,2), factor)) %>%
-    table()
-  if (cond_prob){
-    tbl = tbl %>% prop.table(margin = 1)
-  }
-  tbl
-}
-
-
-
-
-table_multi_cat_income(income_mental_health, "ADSMOK42", "MNHLTH31","low",F)
-
-
-
-```
-
 
 Summary:
 
