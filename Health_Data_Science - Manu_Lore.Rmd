@@ -264,6 +264,8 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
 
 ```
 
+All our variables are significant.
+Arthritis is characterized by a positive correlation with smoking (more pronounced in women), sex and age.
 
 ### Diabetes
 ```{r}
@@ -305,8 +307,10 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
 
 ```
 
+In this case, looking at smoking in general is not significant, but if we control for sex, in the female there is definitely a correlation.
+Diabetes is characterized by a positive correlation with smoking (significant in women) and with age, and a negative one with being female.
 
-### Emphisema
+### Emphysema
 ```{r}
 filter_df <- small_df %>% select(EMPHDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -345,6 +349,9 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   ylim(c(0, 0.35))
 
 ```
+
+All our variables are significant.
+Emphysema is characterized by a positive correlation with smoking and age (more pronounced in smokers), and a negative one for being female.
 
 ### Stroke
 
@@ -387,6 +394,9 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
 
 ```
 
+All our variables are significant, except for the interaction between smoking and sex.
+Stroke is characterized by a positive correlation with smoking and age, and a negative one for being female.
+
 ### Lung Cancer 
 ```{r}
 filter_df <- small_df %>% select(CALUNG, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
@@ -427,7 +437,8 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
 
 ```
 
-
+In this case, both age and interaction between smoking and sex seem to be not significant.
+However we can observe that Lung Cancer is characterized by a positive correlation with both smoking and age, and this correlations are more pronounced for men.
 
 ### Asthma
 
@@ -470,10 +481,10 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+Also in this case, looking at smoking in general is not significant, but if we look at the interaction between smoking and sex, there is definitely a correlation.
+Asthma is quite particular, because is the only one that is characterized by a negative correlation with age. Also in this case we have a positive correlation with smoking (significant in female) and with sex.
 
-
-
-### High Cholesterol (need to discuss)
+### High Cholesterol
 ```{r}
 filter_df <- small_df %>% select(CHOLDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
 
@@ -487,8 +498,6 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 fit <- glm(CHOLDX ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
 
 summary(fit)
-
-summ(fit, model.info = F)
 ```
 
 
@@ -510,6 +519,9 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
        y = "Predicted Probability (Yval)") +
   theme_minimal()
 ```
+Also in this case, looking at smoking in general is not significant, as we see in the interaction with sex, in the female there is definitely a correlation.
+High Cholesterol is characterized by a positive correlation with smoking (significant in women) and with age, and a negative one with being female.
+
 
 ### Chronic Bronchitis
 ```{r}
@@ -526,8 +538,6 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 fit <- glm(CHBRON31 ~ ADSMOK42 * SEX + AGELAST, data = filter_df, family = "binomial")
 
 summary(fit)
-
-summ(fit, model.info = F)
 ```
 
 ```{r}
@@ -553,7 +563,8 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
+In this case, both age and interaction between smoking and sex seem to be not so significant (not at all in general and really low for the interaction).
+However we can observe that Chronic Bronchitis is characterized by a positive correlation with both age and smoking (more pronunced a little bit more pronunced for female).
 
 ### High Blood Pressure
 ```{r}
@@ -594,11 +605,14 @@ ggplot(df_pred, aes(x = AGELAST, y = Yval, col = ADSMOK42)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-As we can say we obtained a lot of different results, both negative and positive,
-but we can see that for some models there is a direct correlation with *AGE*. To prove this 
-we can try if some physical deseases have some of connection.
+In this case, all our variables are significant.
+High Blood Pressure is characterized by a positive correlation with smoking and with age, and a negative one with being female.
 
-#### Trying to see if Colesterol and Blood pressure are correlated
+As we can say we obtained a lot of different results, both negative and positive,
+but we can see that for some models there is a direct correlation with *AGE*. Also some plots are quite similar (like the one for Cholesterol and Blood pressure) So there could be some connection between those disease.
+To prove this we can try if some physical diseases have some of connection.
+
+#### Trying to see if Cholesterol and Blood pressure are correlated
 
 ```{r}
 filter_df <- small_df %>% select(CHOLDX, HIBPDX, ADSMOK42, SEX, AGELAST, AGEGROUP) %>% filter(rowSums(sapply(., function(x) x %in% values_to_remove)) == 0)
@@ -614,8 +628,6 @@ filter_df$SEX <- relevel(filter_df$SEX, ref = "1 MALE")
 fit <- glm(CHOLDX ~ HIBPDX * SEX + AGELAST, data = filter_df, family = "binomial")
 
 summary(fit)
-
-summ(fit, model.info = F)
 ```
 
 ```{r}
@@ -638,6 +650,7 @@ ggplot(prediction, aes(x = AGELAST, y = Yval, col = HIBPDX)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+As we can see, there is definitely a correlation.
 
 ## Multilogit regression for Mental Health
 
@@ -688,15 +701,13 @@ summary(fit)
 ```
 
 Oh no! There is a problem in our regression, what is that? The Hauck-Donner effect?
-It reminds me a name of a music instrument brand...nevermind.
+It reminds me a name of a music instrument brand...never mind.
 
-The Hauck-Donner effect is a problem that can occur if we use small dataframe, indicates that
-the significance of our model can be false. But hou can we solvit? Don't worry, is very simple.
+The Hauck-Donner effect is a problem that can occur if we use small data-frame, indicates that
+the significance of our model can be false. But how can we solve it? Don't worry, is very simple.
 
-We bootstrapped the original dataframe for 100 times (better more but our pc are not so
+We bootstrapped the original data-frame for 100 times (better more but our pc are not so
 powerful).
-
-
 
 ```{r}
 data <- filter_df
@@ -717,6 +728,7 @@ bootstrap_results
 
 boot.ci(bootstrap_results, type = "basic")
 ```
+
 Fortunatly the boostrap confirm the robustness of our model. 
 
 #### Difference between smokers and non smokers
