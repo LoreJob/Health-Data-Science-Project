@@ -41,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #  library(MEPS)
 ```
 
-# 1 - First Paragraph
+# Introduction
 
 **The central question we want to answer is: what are the negative health effects associated with smoking?**
 
@@ -149,6 +149,8 @@ small_df %>% select(SDENICPROD, age_group) %>% group_by(age_group) %>%
 
 
 ```
+
+
 Smoking rate increases with age, till the 45-64 age group. They are the most likely
 to smoke. However the last age group, 65 and over is the one with the lowest rate.
 This fact is key to understand the effect of age: as is well known, general health
@@ -794,8 +796,6 @@ or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
 
 
 ### Smoking and Mental Health
-
-the main issue is that all those variables are multicategorical and not yes or no
 
 ```{r}
 #writing functions to make contingency tables for multiple categories
