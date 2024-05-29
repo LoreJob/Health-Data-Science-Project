@@ -1,5 +1,14 @@
 ---
-title: Health Data Science
+title: Health Data Science Project - Smoking and Electronic Nicotine
+author: 
+  - name: "Manuel Trevisan"
+    email: "886937@stud.unive.it"
+  - name: "Lorenzo Muscillo"
+    email: "1000916@stud.unive.it"
+  - name: "Giuseppe Massidda"
+    email: "901029@stud.unive.it"
+  - name: "Nilufar Iangiboeva"
+    email: "902431@stud.unive.it"
 output:
   html_document:
     fig_caption: yes
@@ -46,12 +55,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-<<<<<<< HEAD
-Problem Statement 
-
-=======
 ## Problem Statement 
->>>>>>> 0d01b30918de42c9925128720da3eb16ce634a06
+
 The objective of this study is to investigate the negative health effects associated with smoking, including both physical and mental health outcomes. Given the widespread prevalence of smoking and the rising use of electronic nicotine products, it is crucial to understand the extent to which these habits impact overall health. Our analysis will focus on identifying the associations between smoking and various health-related issues, as well as exploring the relationship between smoking habits and mental health indicators. Additionally, we will compare these findings with the health effects associated with the use of electronic nicotine products.
 
 
@@ -1115,11 +1120,7 @@ Summary of key points:
 -Stroke: strong association, correct direction
 
 ```{r}
-# I don't like this plot anymore, showing the p-value makes almost no sense
-# it made sense for ADSMOK42 because smokers always had higher rates than non smokers
-# however for SDENICPROD for some diseases users have lower rates than non users
-# so I will try to plot the odds ratio instead, which will let us see in which direction
-# there is association -Giuseppe
+
 chisq_df_diseases = data.frame(diseases = health_disease_variables,
                                p_val_full_data= rep(NA, length(health_disease_variables)),
                                p_val_65plus_data= rep(NA, length(health_disease_variables)),
@@ -1233,7 +1234,10 @@ or_data %>% mutate(diseases = titles_health_disease[diseases]) %>%
 ```
 
 
-
+The graph is clearly showing what we expected: if we don't control for age,
+the association between diagnosis and usage of E-nic. products is opposite.
+However, when we look at individual age groups the direction changes. We found
+many cases of Simpson's paradox: Arthritis, Blood pressure, cholesterol, and Stroke.
 
 
 ### General Health 
