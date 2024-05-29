@@ -1411,7 +1411,8 @@ the general health of e-nicotine products users is the not much lower than that 
 
 # Smoking Cigarettes
 
-Now we started to fit some models for Smoking and E-Smoking. We decided to analyse the two variables in distinct ways because...
+Now we started to fit some models for Smoking and E-Smoking. We decided to analyse the two variables in distinct ways because there is a quite different demographic
+makeup in the two groups of users. As we have seen in the beginning, users of electronic nicotine products tend to be very young. While smokers tend to be middle aged.
 We decide to start with the smoking predictor. We want to keep only *AGE*, *SEX* and *AGEGROUP* as other predictors.
 
 ## Logistic regression for physical health
