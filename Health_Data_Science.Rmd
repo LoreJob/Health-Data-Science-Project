@@ -46,7 +46,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-Problem Statement 
+## Problem Statement 
 The objective of this study is to investigate the negative health effects associated with smoking, including both physical and mental health outcomes. Given the widespread prevalence of smoking and the rising use of electronic nicotine products, it is crucial to understand the extent to which these habits impact overall health. Our analysis will focus on identifying the associations between smoking and various health-related issues, as well as exploring the relationship between smoking habits and mental health indicators. Additionally, we will compare these findings with the health effects associated with the use of electronic nicotine products.
 
 
@@ -56,7 +56,7 @@ will also look at some mental health indicators and how they relate to smoking
 habits. We will also make an interesting comparison with usage of electronic
 nicotine products.
 
-Abstract
+## Abstract
 The negative health effects of smoking have been well-documented, yet the comprehensive impact on both physical and mental health continues to be a critical area of study. This research aims to analyze the associations between smoking and health-related issues using data from the 2021 Medical Expenditure Panel Survey Household Component, which surveyed 15,000 households in the United States. By examining physical health outcomes and mental health indicators, this study seeks to provide a detailed understanding of how smoking affects individuals. Furthermore, we will compare these effects with those associated with the use of electronic nicotine products, offering insights into the potential risks of these increasingly popular alternatives. Our findings aim to inform public health strategies and contribute to ongoing efforts to mitigate the health risks associated with smoking and electronic nicotine product usage.
 
 The dataset we are working with is the Medical Expenditure Panel Survey Household
@@ -2777,4 +2777,11 @@ mtext("General Health Status for NOT E-Smokers", outer = TRUE, cex = 1.5, line =
 
 Also in this case the results for Perceived Mental Health and General Health are quite similar to those previously discussed. A difference we can point out is a general improvement in perceived mental health for E-Smokers (compared to cigarette smokers) and a general worsening in general health for E-Smokers. One interpretation of this could be that some people are switching to E-smoking because of poor health, and what we are seeing is due to external factors or previous habits. Unfortunately, we do not have access to this type of data in this dataset, so we will limit our discussion to what we are observing.
 
+# Conclusions
+
+Our study investigates the negative health effects associated with smoking, focusing on both physical and mental health outcomes. Using the 2021 Medical Expenditure Panel Survey Household Component data, which includes responses from 15,000 households in the United States, we compared the health impacts of smoking with those of using electronic nicotine products (e-nic products). Our analysis reveals that overall general and mental health is better among non-smokers compared to both smokers and e-nic product users. 
+
+However, the data set's limited size constrains the robustness of our findings. Larger and more comprehensive data would likely provide more definitive insights into these health relationships. Additionally, our understanding of the health effects associated with e-nic products remains incomplete due to the relatively new nature of these products and the insufficient data available in our current dataset. Future research should aim to gather more extensive data on e-nic product usage to better assess its impact on mental and general health. 
+
+Despite these limitations, our findings contribute to the growing body of evidence highlighting the adverse health effects of smoking and underscore the need for continued public health efforts to reduce smoking rates and further investigate the health implications of e-nic products.
 
