@@ -47,6 +47,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Introduction
 
 Problem Statement 
+
 The objective of this study is to investigate the negative health effects associated with smoking, including both physical and mental health outcomes. Given the widespread prevalence of smoking and the rising use of electronic nicotine products, it is crucial to understand the extent to which these habits impact overall health. Our analysis will focus on identifying the associations between smoking and various health-related issues, as well as exploring the relationship between smoking habits and mental health indicators. Additionally, we will compare these findings with the health effects associated with the use of electronic nicotine products.
 
 
